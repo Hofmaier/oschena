@@ -1,0 +1,25 @@
+* User-based
+[[http://elehack.net/research/pubs/cf-survey/cf-survey.pdf][collaborative fitering recommendations]]
+** Nearest neighbor
+*** Pearson Similarity
+Um zwei User miteinander zu vergleichen, kann die Pearson Similarity eingesetzt werden.
+Was passiert mit User die keine gemeinschaftlichen Item gerated haben? Wenn es keinen User gibt, der das selbe Item geratet hat ist der Korrelationskoeffizient 0.
+Die Pearson Similarity beruecksichtigt nur gemeinsam geratete Daten.
+* Data
+[[http://files.grouplens.org/datasets/movielens/ml-100k-README.txt][movielens 100k ratings set readme]]
+[[http://files.grouplens.org/datasets/movielens/ml-100k.zip][movielens 100k ratings zip file]]
+Daten in u.data sind in Kolonnen strukturiert. Erste Kolonne user id, zweite item.id, dritte rating, vierte timestamp
+* Haskell
+[[http://www.cse.chalmers.se/~rjmh/Papers/arrows.pdf]]
+
+** Types
+Types werden mit data definiert. Ein Type hat Values. Values werden in der Typedefinition mit Constructors definiert
+** Constructor
+Ein Constructor ist eine Funktion. Der Constructor hat einen Bezeichner und optional Parameter die als Typen angegeben werden.
+** Type constructor
+** Type parameter
+Ein type kann einen typeparamter haben. Dieser wird in der Funktionsdefinition definiert oder vom konkreten value abgeleitet.
+** Typeclasses
+** Type constructor
+
+Nimmt einen type als Parameter.
