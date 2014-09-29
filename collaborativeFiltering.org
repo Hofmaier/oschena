@@ -1,3 +1,5 @@
+* Baseline Predictor
+Es wird einfach der mean aller wertungen berechnen. mal sehen ob ich diese baseline verbessern kann.
 * User-based
 [[http://elehack.net/research/pubs/cf-survey/cf-survey.pdf][collaborative fitering recommendations]]
 ** Nearest neighbor
@@ -8,9 +10,19 @@ Die Pearson Similarity beruecksichtigt nur gemeinsam geratete Daten.
 * Data
 [[http://files.grouplens.org/datasets/movielens/ml-100k-README.txt][movielens 100k ratings set readme]]
 [[http://files.grouplens.org/datasets/movielens/ml-100k.zip][movielens 100k ratings zip file]]
-Daten in u.data sind in Kolonnen strukturiert. Erste Kolonne user id, zweite item.id, dritte rating, vierte timestamp
+Daten in u.data sind in Kolonnen strukturiert. 
+Erste Kolonne user id, zweite item.id, dritte rating, vierte timestamp
 * Haskell
 [[http://www.cse.chalmers.se/~rjmh/Papers/arrows.pdf]]
+
+- IO Action :: Type und typeconstructor. Hat
+- Functor :: ist eine Typeclass. Forder mapf. Ueber diese Struktur kann gemappt werden. can be mapped over.
+- Applicative functors :: Normale Funktionen koennen auf zwei Funktoren angewandt werden. Resultat ist ein Funktor.
+- Value contstructor :: ZipList ist ein value constructor.
+- Type constructor :: list[] ist ein type constructor
+- Monoid :: mappend nimmt zwei Monoids und gibt wieder einen zurueck. Es gibt einen Identity Element und Monoids sind assoziativ.
+- Type class :: Type classes definieren Funktionen, fuer Instanzen einer Type class. Instanzen werden mit type construktoren gemacht. Stellen ein Interface dar.
+- Type variable :: Kommt in der type class Definition vor.
 
 ** Types
 Types werden mit data definiert. Ein Type hat Values. Values werden in der Typedefinition mit Constructors definiert
@@ -23,3 +35,14 @@ Ein type kann einen typeparamter haben. Dieser wird in der Funktionsdefinition d
 ** Type constructor
 
 Nimmt einen type als Parameter.
+** Monoid
+** Functor
+** Warum Haskell
+- Fehler werden frueh erkannt
+- weniger code
+- concurrency und parallel processing kann einfach genutzt werden
+ - eignet sich fuer analyse, modellierung, simulation
+* Evaluation
+- movielens data set hat 5 training test paare. u1.base - u1.test. 
+- training/test ration = x = 80000/20000
+- ich verwende eine accuracy metric. den mean absolute error mae.
