@@ -1,8 +1,15 @@
 * Baseline Predictor
 Es wird einfach der mean aller wertungen berechnen. mal sehen ob ich diese baseline verbessern kann.
+
 * User-based
 [[http://elehack.net/research/pubs/cf-survey/cf-survey.pdf][collaborative fitering recommendations]]
 ** Nearest neighbor
+Es wird eine neighborhood N fuer einen user u erstellt.
+*** Euclidean distance
+ich verwende die squared euclidien distance
+ein beispiel
+[1,2,3] [2,4,6] = 14
+
 *** Pearson Similarity
 Um zwei User miteinander zu vergleichen, kann die Pearson Similarity eingesetzt werden.
 Was passiert mit User die keine gemeinschaftlichen Item gerated haben? Wenn es keinen User gibt, der das selbe Item geratet hat ist der Korrelationskoeffizient 0.
@@ -46,3 +53,11 @@ Nimmt einen type als Parameter.
 - movielens data set hat 5 training test paare. u1.base - u1.test. 
 - training/test ration = x = 80000/20000
 - ich verwende eine accuracy metric. den mean absolute error mae.
+
+* vorgehen
+** TODO similarity fuer 2 user
+** TODO similirity fuer 1 user
+gib eine liste von allen similarities aus tupel (similarity, user)
+
+* Probleme
+- ich habe eine dictionary. key sind user. values sind dictionaries mit items als keys und ratings als values
