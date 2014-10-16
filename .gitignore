@@ -1,1 +1,5 @@
 d.zip
+*.pyc
+ml-100k/
+temp
+u.data
