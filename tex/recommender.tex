@@ -1,0 +1,19 @@
+\documentclass[a4paper, 11pt]{article}
+\author{Lukas Hofmaier}
+\title{Recommender}
+\begin{document}
+\maketitle
+\section{User-user collaborative filtering}
+\subsection{Similarity}
+Um zwei User miteinander zu vergleichen, kann die Pearson Similarity eingesetzt werden.
+Was passiert mit User die keine gemeinschaftlichen Item gerated haben? 
+Wenn es keinen User gibt, der das selbe Item bewertet hat, ist der Korrelationskoeffizient -1.
+Die Pearson Similarity beruecksichtigt nur gemeinsam geratete Daten.
+Was passiert wenn zwei User ein einziges gemeinsames Item haben und dieses gleich bewerten?
+
+
+\begin{equation}
+ sim(u,v) = \frac{(r_{u,i} - \bar{r}_u)(r_{v,i} - \bar{r}_v)}{r_{v,i} - \bar{r}_v}    
+\end{equation}
+Dann zeigt der Pearson Correlation Coffezient eine hohe Aehnlichkeit an.
+\end{document}
