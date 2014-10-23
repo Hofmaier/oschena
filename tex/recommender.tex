@@ -1,4 +1,6 @@
+
 \documentclass[a4paper, 11pt]{article}
+\usepackage[german]{babel}
 \author{Lukas Hofmaier}
 \title{Recommender}
 \begin{document}
@@ -13,7 +15,26 @@ Was passiert wenn zwei User ein einziges gemeinsames Item haben und dieses gleic
 
 
 \begin{equation}
- sim(u,v) = \frac{(r_{u,i} - \bar{r}_u)(r_{v,i} - \bar{r}_v)}{r_{v,i} - \bar{r}_v}    
+ sim(u,v) = \frac{cov(X,Y}{\sigma_X \sigma_Y)} = \frac{(r_{u,i} - \bar{r}_u)(r_{v,i} - \bar{r}_v)}{r_{v,i} - \bar{r}_v}    
 \end{equation}
 Dann zeigt der Pearson Correlation Coffezient eine hohe Aehnlichkeit an.
+
+\subsection{Computing Prediction}
+\label{sec:compp}
+
+M"ochte man f"ur einen User f"ur ein bestimmtes Item ein Rating vorhersagen, kann man folgendermassen vorgehen.
+
+\begin{enumerate}
+\item neigborhood bestimmen
+\item F"ur alle User in der neighborhood, die das Item bewertet haben, multipliziert man das Rating des entsprechenden Users mit dem Wert der Similarity. Dadurch werden Ratings von User, die sehr "ahnlich sind st"arker gewichtet. Man berechnet den Durchschnitt dieser Ratings.
+
+\end{enumerate}
+
+\begin{equation}
+  \label{eq:computeprediction}
+  p_{u,i} = \frac{\sum_{u' \in N}{s(u,u') r_{u',i}}}{\sum_{u' \in N}{|s(u,u')|}}
+\end{equation}
+
+Dabei wird noch nicht ber"ucksicht, dass bestimmte User permanent h"ohere Wertungen geben.
+
 \end{document}
