@@ -1,15 +1,22 @@
+module Useruser
+(uupredict
+) where
+
 import Data.Text (pack, unpack, split, Text)
 import System.IO
 import Math.Statistics
+import Data.List
+
+type Ratings = [[Int]]
 
 main = do
-     contents <- readFile "/home/lukas/oschena/ml-100k/u1.base"
-     putStrLn "end of main"
+     ts <- loadData filepath 
+     putStrLn ("similarity is: " ++ (show (sim_distance u1 u2 ts)))
 
-filepath::String
-filepath = "../ml-100k/u1.base"
+filepath :: String
+filepath = "/home/lukas/oschena/ml-100k/u1.base"
 
-loadData::FilePath -> IO [[Int]]
+loadData::FilePath -> IO Ratings
 loadData x = do
          contents <- readFile x
          return $ strs2texts $ lines contents
@@ -19,6 +26,9 @@ firstline = "1\t1\t5\t874965758"
 
 threelines :: [String]
 threelines = ["1\t1\t5\t874965758","1\t2\t3\t876893171","1\t3\t4\t878542960"]
+
+item :: Int
+item = 1
 
 u1::Int
 u1 = 1
@@ -43,7 +53,22 @@ sim_distance u1 u2 r = pearson (il2fl itemsu1) (il2fl itemsu2)
                        where itemsu1 = ratingsOfUser u1 r (shareditems u1 u2 r)
                              itemsu2 = ratingsOfUser u2 r (shareditems u1 u2 r)
 
+uupredict :: Int -> Int -> Ratings -> Float
+uupredict u i ts = sum [s * (rating u i ts) | (s, u) <- fn] / sum [abs(s) | (s, u) <- fn]
+  where fn = [(s, u) | (s, u) <- neighborhood u ts, hasrated i ts u]
 
+hasrated :: Int -> Ratings -> Int -> Bool
+hasrated item ts user = elem item (itemsOfUser user ts)
+
+rating :: Int -> Int -> Ratings -> Float
+rating user item ts = fromIntegral (head ( [r | u:i:r:_ <- ts, i == item && u == user]))
+
+neighborhood :: Int -> Ratings -> [(Float, Int)]
+neighborhood user ts = take 50 [(sim_distance user u ts, u) | u <- users ts]
+
+users :: Ratings -> [Int]
+users ts = nub [u | u:xs <- ts]
+                                                              
 shareditems :: Int -> Int -> [[Int]] -> [Int]
 shareditems u1 u2 r = shared (itemsOfUser u1 r) (itemsOfUser u2 r)
 
@@ -58,5 +83,3 @@ ratingsOfUser user ratings items = [r | u:i:r:_ <- ratings, u == user && elem i 
 
 il2fl::[Int] -> [Float]
 il2fl il = [fromIntegral x | x <- il]
-
-
