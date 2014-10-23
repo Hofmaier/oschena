@@ -3,3 +3,8 @@ d.zip
 ml-100k/
 temp
 u.data
+*.pdf
+*.dvi
+*.log
+*.aux
+*.out
