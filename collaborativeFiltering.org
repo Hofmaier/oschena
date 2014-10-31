@@ -48,12 +48,26 @@ Dann zeigt der Pearson Correlation Coffezient eine hohe Aehnlichkeit an.
 ** coursera machine learning course
 Jedes Item hat ein Feature vector (romance, action)
 warum braucht man den interceptor (erstes element in einem vektor)
+** implementation
+- daten laden. matrix R hat 1 wenn wert. matrix Y hat alle ratings.
+- cofiCostFunction implementieren
+- minimizer implementieren. was nimmt fmincg fuer argumente
+** learning algorithm
+man moecht die gleichtung J minimieren.
+Koren schlaegt zwei algorithmen vor
+- stochastic gradient descent
+- alternating least squares
+
+1682 user, 943 items
+
+kann ich das auch mit einfachem gradient descent machen?
 * Data
 [[http://files.grouplens.org/datasets/movielens/ml-100k-README.txt][movielens 100k ratings set readme]]
 [[http://files.grouplens.org/datasets/movielens/ml-100k.zip][movielens 100k ratings zip file]]
 Daten in u.data sind in Kolonnen strukturiert. 
 Erste Kolonne user id, zweite item.id, dritte rating, vierte timestamp
 u1.base hat 80000 ratings.
+
 * Haskell
 [[http://www.cse.chalmers.se/~rjmh/Papers/arrows.pdf]]
 
@@ -132,6 +146,8 @@ Projekttitel: Movielens Recommender System
 Projektstart: 29.9.2014
 Projektende: 23.1.2014 (abklaeren)
 ** Projektziele und Projektbeschreibung
+Haendler und Content Provider moechten Kunden passende Artikel empfehlen. Es geht darum Kunden Artikel zuzuweisen. 
+Die Artikel sollen den die 
 Im Laufe dieser Arbeit soll ein Recommender System entwickelt werden. 
 Dabei sollen unter anderem Methode des Collaborative Filtering eingesetzt werden.
 Das Recommender System soll mit einer geigneten Methode evaluiert werden. 
