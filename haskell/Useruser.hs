@@ -2,24 +2,10 @@ module Useruser
 (uupredict
 ) where
 
-import Data.Text (pack, unpack, split, Text)
-import System.IO
 import Math.Statistics
 import Data.List
 
 type Ratings = [[Int]]
-
-main = do
-     ts <- loadData filepath 
-     putStrLn ("similarity is: " ++ (show (sim_distance u1 u2 ts)))
-
-filepath :: String
-filepath = "/home/lukas/oschena/ml-100k/u1.base"
-
-loadData::FilePath -> IO Ratings
-loadData x = do
-         contents <- readFile x
-         return $ strs2texts $ lines contents
 
 firstline::String
 firstline = "1\t1\t5\t874965758"
