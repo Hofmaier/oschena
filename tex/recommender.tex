@@ -1,6 +1,7 @@
 
 \documentclass[a4paper, 11pt]{article}
 \usepackage[german]{babel}
+\usepackage{amsmath}
 \author{Lukas Hofmaier}
 \title{Recommender}
 \begin{document}
@@ -44,6 +45,32 @@ M"ochte man f"ur einen User f"ur ein bestimmtes Item ein Rating vorhersagen, kan
 
 Dabei wird noch nicht ber"ucksicht, dass bestimmte User permanent h"ohere Wertungen geben.
 
+\section{Matrix Factorization}
+\label{sec:matrixfactorization}
+
+Bei Matrixfactorization geht es darum, dass man eine R, die d"unn besetzt ist, voll ausf"ullt. Man geht davon aus Users und Items sogenannte Latent Factors haben. Das heisst ein User hat zum Beispiel bestimmte Preferenzen. Er mag Action Filme aber keine Romanzen. Ein Film kann ebenfalls nach den selben Dimensionen bewertet werden. Das Rating ist das Skalarprodukt der Preferenzen des Users und den Eigenschaften des Items.
+
+\begin{equation}
+  \label{eq:latentfactors}
+  R_{ui} = q_i^T p_u
+\end{equation}
+
+Da man die Latent factors nicht hat, m"ochte man sie approximieren. Die Residuen kann man berechnen indem man, die berechneten Werte von den vorhandenen Werten in R subtrahiert. Die Summe aller Residuen soll minimiert werden.
+\begin{equation}
+  \label{eq:optimization}
+    R_{ui} - q_i^T p_u + \lambda (\lVert q \rVert^2 + \lVert p \lVert ^2)
+\end{equation}
+
+Damit die Elemente der Latent Factor Vectors nicht zu gross werden, werden sie reguliert.
+ 
+Um das Minimum zu finden kann beispielsweise das Verfahren Gradientenabstieg angewendet werden. Dazu wird die Kostenfunktion nach $q_i$ und nach $p_u$ abgeleitet. F"ur $q_i$ lautet die Ableitung:
+\begin{equation}
+  \label{eq:decx}
+  \frac{ \partial }{ \partial q_i } = \sum (q_i^T p_i - r) q_i + \lambda p_i
+\end{equation}
+
+F"ur die $p_i$ wird folgendermassen abgeleitet.
+
 \section{Daten}
 \label{sec:data}
 
@@ -53,6 +80,7 @@ u1.base hat 80000 ratings. 943 User.
 
 Movielens data set hat 5 training test paare. u1.base - u1.test. 
 training/test ration = x = 80000/20000
+
 
 
 \section{Evaluation}
