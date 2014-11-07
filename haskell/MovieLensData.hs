@@ -1,5 +1,6 @@
-module MovielensData
-(loadData
+module MovieLensData
+(loadData,
+loadMatrix
 )
 where
 
