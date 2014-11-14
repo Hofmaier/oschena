@@ -1,7 +1,7 @@
-
 \documentclass[a4paper, 11pt]{article}
 \usepackage[german]{babel}
 \usepackage{amsmath}
+\usepackage{pgfplots}
 \author{Lukas Hofmaier}
 \title{Recommender}
 \begin{document}
@@ -81,9 +81,31 @@ u1.base hat 80000 ratings. 943 User.
 Movielens data set hat 5 training test paare. u1.base - u1.test. 
 training/test ration = x = 80000/20000
 
+\section{Arbeitsspeicher Nutzung}
+\label{sec:ram}
 
+Bei einer Ratingmatrix r mit der Dimension von 1682 mal 943 konsumiert das Programm zu viel Arbeitsspeicher. Es werden 10GB angefordert. Profiling hat gezeigt die Fehler Berechnung viel Arbeitsspeicher konsumiert.
+
+\begin{equation}
+  \label{eq:squareerror}
+  \sum_{(u,i) \in \kappa} (r_{ui} - q_i^T p_u)^2
+\end{equation}
+
+$\kappa$ ist die Menge aller User-Item Paare, f"ur die ein Rating bekannt ist.
 
 \section{Evaluation}
 \label{sec:evaluation}
+
+Um die Recommender Techniken zu evaluieren wurden sie auf ein bestehendes Testset angewendet. Dabei wird der Mean Absolte Error gemessen.
+
+\begin{tikzpicture}
+  \begin{axis}
+    title = Mean Absolute Error,
+    xlabel = Technik,
+    ylabel = MAE,
+  \end{axis}
+\end{tikzpicture}
+
+Es werden ein Baselinealgorithmus, User-user und Matrixfactorization miteinander verglichen.
 
 \end{document}
