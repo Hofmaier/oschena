@@ -4,8 +4,11 @@ module Useruser
 
 import Math.Statistics
 import Data.List
+import Data.Text as T (pack, unpack, split, Text) 
 
 type Ratings = [[Int]]
+type User = Int
+type Item = Int
 
 firstline::String
 firstline = "1\t1\t5\t874965758"
@@ -39,7 +42,7 @@ sim_distance u1 u2 r = pearson (il2fl itemsu1) (il2fl itemsu2)
                        where itemsu1 = ratingsOfUser u1 r (shareditems u1 u2 r)
                              itemsu2 = ratingsOfUser u2 r (shareditems u1 u2 r)
 
-uupredict :: Int -> Int -> Ratings -> Float
+uupredict :: User -> Item -> Ratings -> Float
 uupredict u i ts = sum [s * (rating u i ts) | (s, u) <- fn] / sum [abs(s) | (s, u) <- fn]
   where fn = [(s, u) | (s, u) <- neighborhood u ts, hasrated i ts u]
 
