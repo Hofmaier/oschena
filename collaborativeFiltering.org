@@ -1,5 +1,9 @@
 * Baseline Predictor
 Es wird einfach der mean aller wertungen berechnen. mal sehen ob ich diese baseline verbessern kann.
+** rating dicionary erstellen
+um das avg von user und item auszurechnen sollen dictionaries fuer item und user erstellt werden
+*** TODO user dict
+das user dictionary enthaelt als key user id und als value eine liste aller ratings dieses users
 
 * User-based
 User base filtering sucht nach user, die aehnlich sind. 
@@ -67,6 +71,11 @@ kann ich das auch mit einfachem gradient descent machen?
 Daten in u.data sind in Kolonnen strukturiert. 
 Erste Kolonne user id, zweite item.id, dritte rating, vierte timestamp
 u1.base hat 80000 ratings.
+943 user
+1682 items
+
+ggT 1
+kostenfunktion mit test value gibt 83.02101
 
 * Haskell
 [[http://www.cse.chalmers.se/~rjmh/Papers/arrows.pdf]]
