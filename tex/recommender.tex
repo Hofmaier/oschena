@@ -55,7 +55,7 @@ Bei Matrixfactorization geht es darum, dass man eine R, die d"unn besetzt ist, v
   R_{ui} = q_i^T p_u
 \end{equation}
 
-Da man die Latent factors nicht hat, m"ochte man sie approximieren. Die Residuen kann man berechnen indem man, die berechneten Werte von den vorhandenen Werten in R subtrahiert. Die Summe aller Residuen soll minimiert werden.
+Da man die Latent factors nicht hat, m"ochte man sie approximieren. Die Residuen kann man berechnen indem man, die berechneten Werte von den vorhandenen Werten in R subtrahiert. Die Summe aller Residuen soll minimiert werden \cite{koren2009}`.
 \begin{equation}
   \label{eq:optimization}
     R_{ui} - q_i^T p_u + \lambda (\lVert q \rVert^2 + \lVert p \lVert ^2)
@@ -98,6 +98,12 @@ $\kappa$ ist die Menge aller User-Item Paare, f"ur die ein Rating bekannt ist.
 
 Um die Recommender Techniken zu evaluieren wurden sie auf ein bestehendes Testset angewendet. Dabei wird der Mean Absolte Error gemessen.
 
+Der MAE ist wie folgt definiert \cite{sarwar01}:
+\begin{equation}
+  \label{eq:mae}
+  MAE = \frac{p_i-q_i}{N}
+\end{equation}
+
 \begin{tikzpicture}
   \begin{axis}
     title = Mean Absolute Error,
@@ -108,4 +114,6 @@ Um die Recommender Techniken zu evaluieren wurden sie auf ein bestehendes Testse
 
 Es werden ein Baselinealgorithmus, User-user und Matrixfactorization miteinander verglichen.
 
+\bibliographystyle{plain}
+\bibliography{a}
 \end{document}
