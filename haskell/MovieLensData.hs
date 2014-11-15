@@ -1,6 +1,7 @@
 module MovieLensData
 (loadData,
 loadMatrix,
+loadUirs,
 ypath,
 xpath,
 thetapath,
@@ -8,7 +9,11 @@ xrpath,
 yrpath,
 thetarpath,
 rpath,
-rrpath
+rrpath,
+testsetpath,
+filepath,
+bu,
+UserItemRating
 )
 where
 
@@ -21,6 +26,7 @@ import qualified Data.MultiMap as Map
 
 type UserItemRating = [Int]
 type User = Int
+type Item = Int
 type Rating = Int
 type URdict = Map.MultiMap User Int
 
@@ -113,8 +119,9 @@ loadurdict uirs = foldl insertr Map.empty uirs
 insertr :: URdict -> UserItemRating -> URdict
 insertr acc (u:i:r:_) = Map.insert u r acc
 
-bu :: User -> URdict -> Float
-bu u d = fromIntegral((sum (ratingsOfUser u d))) / fromIntegral ((length (ratingsOfUser u d)))
+bu :: User -> Item -> [UserItemRating] -> Float
+bu u _ r = fromIntegral((sum (ratingsOfUser u d))) / fromIntegral ((length (ratingsOfUser u d)))
+         where d = loadurdict r
 
 ratingsOfUser :: User -> URdict -> [Int]
 ratingsOfUser u d = Map.lookup u d
