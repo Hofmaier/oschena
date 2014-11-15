@@ -8,3 +8,5 @@ u.data
 *.log
 *.aux
 *.out
+*.bbl
+*.blg

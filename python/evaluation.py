@@ -105,8 +105,8 @@ def mae(predictions, ratings):
 useridcolumn = 0
 itemcolumn = 1
 ratingcolumn = 2
-trainingdata = loaddata('ml-100k/u1.base')
-testdata = loaddata('ml-100k/u1.test')
+trainingdata = loaddata('../ml-100k/u1.base')
+testdata = loaddata('../ml-100k/u1.test')
 ratings = [e[ratingcolumn] for e in trainingdata]
 
 
@@ -153,4 +153,5 @@ avgmae = mae(avgpredictions, testdata)
 itemavgpredictions = predictions(trainingdata, inputdata, itemaverage )
 #itemavgmae = mae(itemavgpredictions, testdata)
 #useruserpredictions = useruserpredict(inputdata, trainingdata)
+
 
