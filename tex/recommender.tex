@@ -6,6 +6,11 @@
 \title{Recommender}
 \begin{document}
 \maketitle
+
+\section{Unpers"onliche Empfehlung}
+\label{sec:simple}
+
+
 \section{User-user collaborative filtering}
 User base filtering sucht nach user, die "ahnlich sind. 
 Die Technik um "ahnliche User zu finden heisst kNN (k neirest neighbors).
@@ -32,6 +37,10 @@ Dann zeigt der Pearson Correlation Coffezient eine hohe Aehnlichkeit an.
 
 M"ochte man f"ur einen User f"ur ein bestimmtes Item ein Rating vorhersagen, kann man folgendermassen vorgehen.
 
+\begin{equation}
+  p_{u,i} = \frac{\sum_{u' \in N}s(u,u')}{\sum_{u \in N}|s(u,u)|}
+\end{equation}
+
 \begin{enumerate}
 \item neigborhood bestimmen
 \item F"ur alle User in der neighborhood, die das Item bewertet haben, multipliziert man das Rating des entsprechenden Users mit dem Wert der Similarity. Dadurch werden Ratings von User, die sehr "ahnlich sind st"arker gewichtet. Man berechnet den Durchschnitt dieser Ratings.
@@ -42,6 +51,8 @@ M"ochte man f"ur einen User f"ur ein bestimmtes Item ein Rating vorhersagen, kan
   \label{eq:computeprediction}
   p_{u,i} = \frac{\sum_{u' \in N}{s(u,u') r_{u',i}}}{\sum_{u' \in N}{|s(u,u')|}}
 \end{equation}
+
+$N$ sind alle User die das Item $i$ bewertet haben. $s$ ist eine Funktion die einen Wert f"ur die "Ahnlichkeit zwischen dem gew"unschten User $u$ und dem User $u'$ in der Nachbarschaft $N$ bestimmt.
 
 Dabei wird noch nicht ber"ucksicht, dass bestimmte User permanent h"ohere Wertungen geben.
 
@@ -64,12 +75,23 @@ Da man die Latent factors nicht hat, m"ochte man sie approximieren. Die Residuen
 Damit die Elemente der Latent Factor Vectors nicht zu gross werden, werden sie reguliert.
  
 Um das Minimum zu finden kann beispielsweise das Verfahren Gradientenabstieg angewendet werden. Dazu wird die Kostenfunktion nach $q_i$ und nach $p_u$ abgeleitet. F"ur $q_i$ lautet die Ableitung:
+
 \begin{equation}
   \label{eq:decx}
   \frac{ \partial }{ \partial q_i } = \sum (q_i^T p_i - r) q_i + \lambda p_i
 \end{equation}
 
 F"ur die $p_i$ wird folgendermassen abgeleitet.
+
+\subsection{Funk's stochastic gradient descent}
+\label{sec:funksvd}
+
+Um die Gleichung \ref{eq:optimization} zu optimieren kann Funk's gradient descent eingesetzt werden.
+
+\begin{equation}
+  \label{eq:funksvd}
+  p_i \leftarrow p_i + \gamma (e_{iu} p_u + \lambda p_i)
+\end{equation}
 
 \section{Daten}
 \label{sec:data}
@@ -104,15 +126,29 @@ Der MAE ist wie folgt definiert \cite{sarwar01}:
   MAE = \frac{p_i-q_i}{N}
 \end{equation}
 
+Um die implementieren Techniken zu evaluieren, werden sie mit Baselinealgorithmen verglichen. 
+Folgende Baselinealgorithmen wurden eingesetzt:
+\begin{description}
+\item[globaler Durchschnitt] Der Durchschnitt aller Ratings
+\item[Item Durchschnitt] Der Durchschnitt aller Ratings f"ur ein Item
+\item[User Durchschnitt] Der Durchschnitt aller Ratings die ein User vergeben hat
+\end{description}
+
+
 \begin{tikzpicture}
-  \begin{axis}
-    title = Mean Absolute Error,
-    xlabel = Technik,
-    ylabel = MAE,
+  \begin{axis}[
+    xbar, xmin=0,
+    width=12cm, enlarge y limits=0.5,
+    xlabel={MeanAbsoluteError},
+    symbolic y coords = {Global-AVG,Item-AVG,User-AVG,Useruser},
+    ytick = data,
+    nodes near coords, nodes near coords align={horizontal},
+    ]
+    \addplot coordinates {(1.044,Global-AVG) (0.930,User-AVG) (0.872,Item-AVG) (0.857,Useruser) };
   \end{axis}
 \end{tikzpicture}
 
-Es werden ein Baselinealgorithmus, User-user und Matrixfactorization miteinander verglichen.
+Aus der Abbildung ist ersichtlich, dass der Fehler des Recommender bei Useruser am geringsten ist.
 
 \bibliographystyle{plain}
 \bibliography{a}
