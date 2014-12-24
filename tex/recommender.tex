@@ -1,13 +1,14 @@
-\documentclass[a4paper, 11pt]{article}
+\documentclass[a4paper, 12pt]{article}
 \usepackage[ngerman]{babel}
 \usepackage{amsmath}
+\usepackage{amsfonts}
 \usepackage{listings}
 \usepackage{pgfplots}
 \usepackage{graphicx}
 \pgfplotsset{compat=1.9}
 \usepackage{tikz}
 \author{Lukas Hofmaier}
-\title{Recommender}
+\title{Userbased Collaborative Filtering und Matrixfaktorisierung}
 \begin{document}
 
 \lstset{basicstyle=\small,
@@ -63,7 +64,7 @@ Man kann zwei Resultate von Collaborative Filtering unterscheiden.
 \item[Empfehlung] Das System gibt eine Liste von $N$ Items zur"uck, die Items in der Liste hat der user noch nicht bewertet und das System hat die h"ochsten Bewertungen f"ur den aktiven User berechnet.
 \end{description}
 
-\begin{figure}[h]
+\begin{figure}
   \centering
       \includegraphics[width=0.5\textwidth]{cf}
   \caption{Collaborative Filtering Prozess}
@@ -79,11 +80,10 @@ Einem User werden diejenigen Items empfohlen, die er noch nicht kennt und die ei
 
  M"ochte man das Rating von einem User f"ur ein bestimmtes Item ab\-sch"atz\-en, schaut man, ob User in der Nachbarschaft das Item bereits bewertet haben. Aufgrund der "Ahnlickeit und den vorhandenen Ratings berechnet man das Rating das der User f"ur dieses Item abgeben w"urde.
 
-
 \subsection{Herausforderungen}
 \label{sec:challenges}
 
-Bei der Implementierung von Recommendersystemen ergeben sich zwei Herausforderunge.
+Bei der Implementierung von Recommendersystemen ergeben sich mehrere Herausforderungen.
 
 \begin{description}
 \item[Genauigkeit] Die Differenz der Empfehlungen die das Recommendersystem macht sollen so wenig wie m"oglich von der tats"achlichen Bewertung abweichen.
@@ -92,11 +92,12 @@ Collaborative Filtering muss f"ur Millionen User und Items m"oglich sein. Die Te
 \item[Sparsity] F"ur eine grosse Menge an Items gibt es in der Regel nur eine kleine Anzahl an Items die ein User auch bewertet hat. Wenn sich keine gemeinsamen Items zwischen den Usern finden k"onnen auch keine Nachbarschaften gebildet werden.
 \end{description}
 
-
 \section{Unpers"onliche Empfehlungtechniken}
 \label{sec:simple}
 
-Um einem User Items zu empfehlen werden oft einfache Statistiken berechnet. Diese Methoden sind unpers"onlich. Das heisst die Top-N Empfehlungen sind nicht vom personlichen Geschmack von $u$ abh"angig. Jeder User erh"alt die selben Empfehlungen. 
+Dieser Abschnitt beschreibt einfache, alternative, M"oglichkeiten relative gute Empfehlungen zu generieren. Diese Techniken werden sp"ater bei der Evaluation mit User based Collaborativ Filtering und Matrixfaktorisierung verglichen. So ist einfach ersichtlich, ob die Collaborative Filtering Algorithmen einen qualitativen Vorteil bringen.
+
+Um einem User Items zu empfehlen werden oft einfache Statistiken berechnet. Diese Methoden sind unpers"onlich. Das heisst die Top-N Empfehlungen sind nicht vom pers"onlichem Geschmack von $u$ abh"angig. Jeder User erh"alt die selben Empfehlungen. 
 
 Diese Technik wird in vielen Bereichen angewendet. Restaurantf"uhrer oder Filmkritikwebseiten erstellen oft Ranglisten, welche Restaurants oder Filme von allen Usern im Durchschnitt am besten bewertet werden. Items mit den h"ochsten Durchschnittswerten, werden dem User empfohlen.
 
@@ -134,7 +135,10 @@ Nach folgend bezeichnet $u$ den aktiven User und $i$ das Item, f"ur das man eine
   b_{u,i} = \mu + b_u + b_i
 \end{equation}
 
+Listing \ref{lst:baseline} zeigt die Implemenation der Baseline Algorithmen.
+
 \begin{lstlisting}[caption=Baseline predictor, label=lst:baseline]
+import Math.Statistics
 bui :: User -> Item -> Double
 bui u i = mu + bu + bi
   where mu = avg allratings
@@ -142,12 +146,92 @@ bui u i = mu + bu + bi
         bi = computebu i
 
 computebu :: User -> Double
-computebu u = sum lookup u usermap
+computebu u = sum ratings / nrOfratings
+              where ratings = lookup u usermap
+                    nrOfratings = length ratings
 
 computebi :: Item -> Double
-computebi i = sum lookup u itemmap
+computebi i = sum ratings / nrOfratings
+              where ratings = lookup i itemmap
+                    nrOfratings = length ratings
 \end{lstlisting}
 
+$\mu$ kann einfach berechnet werden. Das Modul \verb|Math.Statistics| stellt die Funktion \verb|avg| zur Verf"ugung. \verb|allratings| gibt eine Liste aller Bewertungen zuru"ck. \verb|usermap| und \verb|itemmap| sind Maps. Die Funktion \verb|lookup| l"auft in O(logn).
+
+In Diagramm \ref{fig:maebaselines} werden die verschiedenen, unpers"onlichen Recommender miteinander verglichen. Die Kombination aus Durchschnitt und Abweichung vom Durschnitt kann die Bewertungen der User am besten vorhersagen. Das Diagramm zeigt den Mean Absolute Error. Dieser Wert ist kurz gesagt der Durchschnitt der Abweichung der Vorhersage von tats"achlichen Wert.
+
+\begin{figure}
+  \centering
+\begin{tikzpicture}
+  \begin{axis}[
+    xbar, xmin=0,
+    width=12cm, enlarge y limits=0.5,
+    symbolic y coords = {Global-AVG,Item-AVG,User-AVG,$b_{ui}$},
+    xlabel={MeanAbsoluteError},
+    ytick = data,
+    nodes near coords, nodes near coords align={horizontal},
+    ]
+    \addplot coordinates {(1.044,Global-AVG) (0.930,User-AVG) (0.877,Item-AVG) (0.861,$b_{ui}$)};
+  \end{axis}
+\end{tikzpicture}
+  
+  \caption{Vergleich: unpers"onliche Empfehlungen}
+  \label{fig:maebaselines}
+\end{figure}
+
+\section{Evaluation}
+\label{sec:evaluation}
+
+Dieser Abschnitt beschreibt wie die Qualit"at der Algorithmen evaluiert wurde.
+
+\subsection{Daten}
+\label{sec:data}
+
+Ein Recommenderalgorithmus ben"otigt Daten um das Model zu erstellen. Diese Daten liegen oft in Form einer Matrix vor. Die Zeilen rep"asentieren Items und die Kolonnen User. In den Zellen steht welce Bewertung ein User einem Item gegeben hat. Diese Matrix nennt man Ratingmatrix.
+
+Die Daten f"ur Recommender Systeme k"onnen auf zwei unterschiedliche Arten beschafft werden.
+
+\begin{description}
+\item[Explizites Feedback] Bei explizitem Feedback verl"asst man sich auf Daten die User explizit eingegen haben. Beispielsweise werden User aufgefordert, dem System ihre Preferenzen anzugeben oder man pr"asentiert den User eine Reihe von Items, die er auf einer Skala von 1 bis 5 bewerten muss. Ein Problem von explizitem Feedback ist, dass es oft zu d"unn besetzten Ratingmatrizen f"uhrt, da die User keine Zeit haben um alle verf"ugbaren Items zu bewerten.
+\item[Implizites Feedback] Implizites Feedback leitet die Bewertungen der User f"ur Items aus Beobachtungen ab. Das System beobachtet die Interaktionen, wie zum Beispiel in Vergangheit gekaufte Artikel, Browsehistory, Suchanfragen oder Klickverhalten, des User mit dem System. Oft besteht implizites Feedback nur aus boolschen Werten. Das heisst entweder ein Ereignis ist eingetreten oder nicht.
+\end{description}
+
+ Der User-based Collaborative Filtering Algorithmus berechnet zu jedem User-Item Paar eine "Ahnlichkeit und zu jedem User eine Nachbarschaft. Das System ben"otigt eine sogenannte Ratingmatrix, die Auskunft dar"uber gibt, welche Bewertung die User den Items gegeben haben.
+
+F"ur das Projekt wurden die Daten von Movielens verwendet. MovieLens wurde von vom GroupLens Projekt an der Universit"at Minnesota entwickelt. Die Daten k"onnen von http://www.grouplens.org/node/12 heruntergeladen werden. 
+
+Das Datenset enth"alt die Bewertung von 943 User und 1682 Items.  Daten sind in Kolonnen strukturiert. Erste Kolonne user id, zweite item.id, dritte rating, vierte timestamp. Es enth"alt insgesamt 100000 Bewertungen. In diesem Projekt wurde das Set in 80000 Bewertungen f"ur die Lernphase und 20000 Bewertungen f"ur die Evaluierung aufgeteilt. 
+
+\subsection{Vorgehen}
+\label{sec:procedure}
+
+Um Evaluationsmetriken zu bestimmen, werden die gegeben Daten in ein Trainings und ein Testset aufgeteilt. Das Model des Recommendersystem wird berechnet. Im Fall des User-based Collaborative Filtering werden f"ur alle User die "Ahnlichkeiten zu anderen User berechnet.
+
+\begin{figure}
+  \centering
+      \includegraphics[width=0.5\textwidth]{evaluation}
+  \caption{Collaborative Filtering Prozess}
+\end{figure}
+
+Die Bewertungen im Testset beinhalten den User $u$, das Item $i$ und die Bewertung pro Zeile. Mit dem berechneten Model muss der Recommender zu jedem $u$-$i$ Paar eine Bewertung vorhersagen. Diese Vorhersage vergleicht man mit dem tats"achlichen Bewertung aus dem Testset.
+
+\subsection{Evaluationsmetrik}
+\label{sec:evaluationmetrik}
+
+Die Qualit"at des Recommendersystem kann mit Evaluationsmetriken "uberpr"uft werden. Evaluationsmetriken geben Auskunft dar"uber wie gut das Recommendersystem ist. Idealerweise kann ein Recommendersystem die Bewertung f"ur einen User und ein Item vorhersagen. Statistische Genauigkeitsmetriken geben an wie weit entfernt die Vorhersage vom tats"achlichen Wert ist. 
+
+Es gibt verschieden Evaluationsmetriken. In diesem Projekt wurde der Mean Absolute Error als Metrik verwendet. MAE vergleicht die tats"achliche Bewertung eines User f"ur ein Item mit der Bewertung, die der Recommender berechnet hat. Man bildet die Differenz von Vorhersage und tats"achlicher Bewertung. Von der Differenz wird der Betrag berechnet. Schliesslich bestimmt man die mittlere Abweichung, indem man durch Anzahl Bewertungen $N$ im Testset teilt 
+
+Der MAE ist wie folgt definiert \cite{sarwar01}:
+
+\begin{equation}
+  \label{eq:mae}
+  MAE = \frac{\sum_{i+1}^N | p_i-q_i | }{N}
+\end{equation}
+
+Je tiefer der MAE, desto besser ist die Genauigkeit des Recommender.
+
+Root Mean Squared Error und Correlation sind zwei weitere Metriken.
 
 \section{User-based collaborative filtering}
 
@@ -229,7 +313,7 @@ shareditems u1 u2==[x|i1<-is1,i2<-is2,x == y]
   where is1=lookup u1 itemMap
         is2=lookup u2 itemMap
 \end{lstlisting}
-
+n
 Sobald man die gemeinsam bewerteten Items hat und die dazugeh"origen Bewertungen der User kann man die Bewertungen der \verb|pearson|-Funktion "ubergeben. Diese gibt die "Ahnlichkeit der User $u$ und $v$ zur"uck. Die "Ahnlichkeit wird mit einer Gleitkommazahl zwischen -1 und 1 ausgedr"uckt. 1 bedeuted sie sind gleich. -1 bedeutet sie sind sich un"ahnlich.
 
 \subsubsection{Euklidische Distanz}
@@ -244,6 +328,8 @@ Jede Wertung entspricht dem Wert einer Dimension. Die euklidische Distanz berech
  sim(u,v) = \sum_i^n (u_i - p_i )^2
 \end{equation}
 
+Die euklidische Distanz ber"ucksichtigt nicht, dass bestimmte User permanent h"ohere Wertungen geben.
+
 \subsection{Unbekannte Bewertung absch"atzen}
 \label{sec:compp}
 
@@ -251,15 +337,11 @@ Sobald man die "Ahnlichkeiten zwischen allen Usern ausgerechnet hat, kann man f"
 
 Die Berechnung kann in zwei Schritte aufgeteilt werden:
 \begin{description}
-\item[Nachbarschaft bestimmen] F"ur User $u$ wird eine Nachbarschaft $N \subseteq U$ erstellt. Diese Nachbarschaft enth"alt Tupel mit anderen Usern und deren "Ahnlichkeit zu $u$. Die Nachbarschaft ist sortiert nach "Ahnlichkeit.
-\item [gewichtetes Mittel bilden] Wenn man $N$ nimmt man daraus $k$ "ahnliche User aus $N$, die das Item $i$ bewertet haben. F"ur alle User dieser Schnittmenge, multipliziert man das Rating des entsprechenden Users mit dem Wert der Similarity zu $u$. Dadurch werden Ratings von User, die sehr "ahnlich sind st"arker gewichtet. Man berechnet den Durchschnitt dieser Ratings. Um die gesch"atzte Bewertung zu normieren, wird die Summe der gewichteteten Bewertungen durch die Summe aller Gewichte geteilt.
+\item[Nachbarschaft bestimmen] F"ur User $u$ wird eine Nachbarschaft $N \subseteq U$ erstellt. Diese Nachbarschaft enth"alt Tupel mit anderen Usern und deren "Ahnlichkeit zu $u$. Die Nachbarschaft ist sortiert nach "Ahnlichkeit. Die Nachbarschaft wird aufgrund der Trainingsdaten erstellt. Sie stellt das Model von user-based Collaborative Filtering dar. Wenn im zweiten Schritt eine unbekannte Bewertung abgesch"atzt werden soll wird auf die vorberechneten Nachbarschaften zugegriffen.
+\item [gewichtetes Mittel bilden] Wenn man $N$ hat, nimmt man daraus $k$ "ahnliche User aus $N$, die das Item $i$ bewertet haben. F"ur alle User dieser Schnittmenge, multipliziert man das Rating des entsprechenden Users mit dem Wert der Similarity zu $u$. Dadurch werden Ratings von User, die sehr "ahnlich sind st"arker gewichtet. Man berechnet den Durchschnitt dieser Ratings. Um die gesch"atzte Bewertung zu normieren, wird die Summe der gewichteteten Bewertungen durch die Summe aller Gewichte geteilt. Gleichung \ref{eq:computeprediction} beschreibt die Berechnung von $p_{u,i}$ formel.
 \end{description}
 
-M"ochte man f"ur einen User $u$ f"ur ein bestimmtes Item $i$, das er noch nicht bewertet hat, eine Bewertung vorhersagen, kann man folgende Formel werden.
-
-\begin{equation}
-  p_{u,i} = \frac{\sum_{u' \in N}s(u,u')}{\sum_{u \in N}|s(u,u)|}
-\end{equation}
+M"ochte man f"ur einen User $u$ f"ur ein bestimmtes Item $i$, das er noch nicht bewertet hat, eine Bewertung vorhersagen, kann man also folgende Formel anwenden.
 
 \begin{equation}
   \label{eq:computeprediction}
@@ -268,9 +350,104 @@ M"ochte man f"ur einen User $u$ f"ur ein bestimmtes Item $i$, das er noch nicht 
 
 $N$ sind alle User, die das Item $i$ bewertet haben. $s$ ist eine Funktion die einen Wert f"ur die "Ahnlichkeit zwischen dem gew"unschten User $u$ und dem User $u'$ in der Nachbarschaft $N$ bestimmt.
 
-Dabei wird noch nicht ber"ucksicht, dass bestimmte User permanent h"ohere Wertungen geben.
+Bei der Berechnung von $p_{u,i}$ kann die Gr"osse der Nachbarschaft $N$ frei gew"ahlt werden. Die Gr"osse der Nachbarschaft ist definiert als Parameter $k$. Wenn $k$ zu klein ist, werden nur wenige Bewertungen von anderen User zu Berechnung verwendet. Da $p_{u,i}$ in diesem Fall nur von wenigen anderen Usern abh"angig ist, ist es anf"allig f"ur Ausreisser. Wenn $k$ zu gross gew"ahlt wird, werden auch die Bewertungen der User die dem aktiven User un"ahnlich sind ber"ucksichtigt. Diese Bewertungen sind f"ur den aktiven User nicht interessant. 
 
-\section{Matrix Factorization}
+Die Implementation der Gleichung \ref{eq:computeprediction} ist in Listing \ref{lst:knnpredict} dargestellt. Die Funktion \verb|predict| nimmt User, Item, Model und $k$ als Argument. Das Model enth"alt die vorberechneten Nachbarschaften. Die Funktion \verb|knn| greift darauf zu und stellt die Nachbarschaft f"ur den aktiven User und dem gew"unschten Item zusammen.
+
+\begin{lstlisting}[caption=Berechnung von $p_{u,i}$, label=lst:knnpredict]
+  predict :: User
+   -> Item
+   -> Model
+   -> Int
+   -> Double
+predict user item model k = rating / normalization
+  where neighborhood = knn user item model k
+        normalization = sum [ s | (s,_,_) <- neighborhood]
+        rating = sum [s * r | (s, r, u) <- neighborhood]
+\end{lstlisting}
+
+\subsection{Resultate}
+\label{sec:userbasedresults}
+
+In diesem Abschnitt werden die Resultate der Evaluation von Userbased Collaborative Filtering pr"asentiert. Userbased Collaborative Filtering nimmt zwei Parameter.
+\begin{itemize}
+\item "Ahnlichkeitsmetrik
+\item Nachbarschaftsgr"osse $k$
+\end{itemize}
+
+In diesem Projekt wurden zwei A"hnlichkeitsmetriken implementiert.
+
+\begin{itemize}
+\item Euklidische Distanz
+\item Pearson Correlation
+\end{itemize}
+
+F"ur jede "Ahnlichkeitmetrik wurde ein Userbased-Model mit dem Trainingset erstetllt. Diese wurden mit dem Testset evaluiert. Der Vegleich der "Ahnlichkeitmetriken wurde mit einer Nachbarschaftsgr"osse $k$ von 30 erstellt.
+
+\begin{figure}
+  \centering
+\begin{tikzpicture}
+  \begin{axis}[
+    xbar, xmin=0.8,
+    height=4.5cm, width=12cm, enlarge y limits=0.5,
+    symbolic y coords = {Euklidische Distanz,Pearson Korrelation},
+    xlabel={MeanAbsoluteError},
+    ytick = data,
+    nodes near coords, nodes near coords align={horizontal},
+    ]
+    \addplot coordinates {(0.872,Euklidische Distanz) (0.831,Pearson Korrelation)};
+  \end{axis}
+\end{tikzpicture}
+\label{fig:similarity}
+\caption{Vergleich der "Ahnlichkeitsmetriken euklidische Distanz und Pearson Korrelation}
+\end{figure}
+
+Der Vergleich der "Ahnlichkeitsmetriken zeigt, dass der Userbased Collaborative Filtering Algorithmus bessere Bewertungen mit dem Pearson Korrelation sch"atzt.
+
+Die Gr"osse der Nachbarschaft $k$ hat grossen Einfluss auf die Qualit"at des Recommender. Um den besten Wert f"ur $k$ herauszufinden wurden mehrere Testl"aufe mit unterschiedlichem $k$ ausgef"uhrt.
+
+\begin{figure}
+  \centering
+\begin{tikzpicture}
+  \begin{axis}[
+    title=Sensitiv"at der Nachbarschaftsgr"osse,
+    xlabel=Anzahl Nachbarn,
+    ylabel=MAE,
+]
+\addplot table {kdata.dat};
+  \end{axis}
+\end{tikzpicture}
+\label{fig:nrofneighbors}
+\caption{Vergleich der "Ahnlichkeitsmetriken euklidische Distanz und Pearson Korrelation}
+\end{figure}
+
+Abbildung \ref{fig:nrofneighbors} zeigt den Mean Absolute Error in Abh"angigkeit der Nachbarschaftsgr"osse $k$. F"ur das gegebene Testset funktioniert eine Nachbarschaftsgr"osse von 30 am besten.
+
+Im Vergleich zur unpers"onlichen Bewertungsberechnung \ref{eq:bui}, generiert der User-based Collaboritive Filtering Algorithmus Bewertungen, die einen tieferen Mean Absolute Error zur Folge haben.
+
+\begin{figure}
+  \centering
+\begin{tikzpicture}
+  \begin{axis}[
+    xbar, xmin=0.8,
+    height=4.5cm, width=12cm, enlarge y limits=0.5,
+    symbolic y coords = {Userbased,$b_{ui}$},
+    xlabel={MeanAbsoluteError},
+    ytick = data,
+    nodes near coords, nodes near coords align={horizontal},
+    ]
+    \addplot coordinates {(0.831,Userbased) (0.861,$b_{ui}$)};
+  \end{axis}
+\end{tikzpicture}
+\label{fig:uuvsbui}
+\caption{Vergleich von Userbased CF mit unpers"onlichen Empfehlungen}
+\end{figure}
+
+F"ur den Vergleich von Abbildung \ref{fig:uuvsbui} wurde der Userbased Algorithmus mit einer Nachbarschaftsgr"osse von 30 und mit der Pearson Korrelation Metrik ausgef"uhrt. 
+
+Wie man Abbildung \ref{fig:uuvsbui} entnehmen kann bringt Userbased Collaborative Filtering einen qualitativen Vorteil. Der Algorithmus ist intuitiv und relative einfach zu implementieren. Da er nur zwei Paramter hat ("Ahnlichkeitsmetrik, Nachbarschaftsgr"osse) kann man den Algorithmus einfach einsetzen. Wenn man gute Map Implementationen zur Verf"ugung hat, kann eine Bewertung in vern"unftiger Zeit abgesch"atzt werden.
+
+\section{Matrix Faktorisierung}
 \label{sec:matrixfactorization}
 
 Collaborative Filtering kann man weiter noch in neighborhood methods und latent factor model aufteilen. Bei Neighborhood Methoden geht es darum "ahnliche User oder Items zu finden. Latent Factor Models versuchen die Items und die User zu charakterisieren. 
@@ -296,141 +473,323 @@ Beim Latent Factor Ansatz ist es nicht relevant, welche Bedeutung die Elemente i
 Abbildung \ref{fig:moviedimension} veranschaulicht die Idee.
 
 \begin{figure}
+\centering
 \begin{tikzpicture}[inner sep=5pt]
 \begin{axis}[nodes near coords,enlargelimits=0.5]
 \addplot+[only marks,
 point meta=explicit symbolic]
 coordinates {
-(0.5,0.2) [Braveheart]
+(0.5,0.3) [Braveheart]
 (0.2,0.1) [Oceans 11]
-(0.6,0.8) [Lord of the Rings]
-(0.35,0.4) [Rambo 4]
-(0.65,0.1) [Pride and Prejudice]
+(0.6,0.9) [Lord of the Rings]
+(0.35,0.5) [Rambo 4]
+(0.6,0.1) [99 francs]
 };
 \end{axis}
 \end{tikzpicture}
 \label{fig:moviedimension}
 \end{figure}
 
+\subsection{Matrixfaktorisierung Model}
+\label{sec:matrixfactorizationmodel}
+
+Das Model der Matrixfaktorisierung weist jedem User und jedem Item einen Latent Factor Vektor der L"ange $f$ zu. Jedes Item kann durch einen Vektor $q_i \in \mathbb{R}^f$ repr"asentiert werden und jeder User kann durch einen Vektor $p_u \in \mathbb{R}^f$ repr"asentiert werden. Wenn man die Bewertung von Item $i$ f"ur User $u$ absch"atzen m"ochte, kann man das Vektorprodukt von $q_i$ und $p_u$ berechnen.
+
 \begin{equation}
-  \label{eq:latentfactors}
-  R_{ui} = q_i^T p_u
+  \label{eq:rui}
+  \hat(r_{ui}) = q_i^T p_u
 \end{equation}
 
-Da man die Latent factors nicht hat, m"ochte man sie approximieren. Die Residuen kann man berechnen indem man, die berechneten Werte von den vorhandenen Werten in R subtrahiert. Die Summe aller Residuen soll minimiert werden \cite{koren2009}`.
+$\hat(r_{ui})$ bescheibt wie gut die Preferenzen des Users $u$ mit den Eigenschaften des Items $i$ "ubereinstimmen. Das nennt man die Interaktion zwischen User und Item.
+
+In Haskell l"asst kann die Gleichung \ref{eq:rui} kann einfach umgesetzt werden. Das Module \verb|Data.Vector| aus dem Package \verb|vector| stellt die Funktion \verb|vdot| zur Verf"ugung. Die Implemantation ist in Listing \ref{lst:rui} dargestellt.
+
+\begin{lstlisting}[caption=Implementation der Vorhersage, label=lst:rui]
+import module Data.Vector
+rui:: Vector -> Vector -> Double
+rui qi pu = vdot qi pu
+\end{lstlisting}
+
+\subsection{Dimensions Reduktion}
+\label{sec:dimred}
+
+Repr"sentiert man die User-Item Interaktion mit der Ratingmatix ben"otigt man 
+
+\begin{equation}
+  \label{eq:dimre}
+  1682 * 943 = 1586126
+\end{equation}
+
+Eintr"age. Diese 1,5M Eintr"ge m"ussen alle berechnet werden. Wenn man die Interaktion zwischen User und Item mit Latent Factor Vektoren mit 40 Faktoren repr"asentiert ben"otigt man 
+
+\begin{equation}
+  \label{eq:dimred}
+  40(1682*943) = 105000
+\end{equation}
+
+Eintr"age. Das sind mehr als 15-mal weniger. Mit den Latent Factor Vektoren kann man die Interaktion zwischen User und Item kompakter darstellen.
+
+\subsection{Optimierung}
+\label{sec:optim}
+
+Bei Matrixfactorization geht es darum, die Latent Factor Vektoren $q_i$ und $q_u$ f"ur jedes Item und jeden User abzusch"atzen. Sobald alle alle Latent Factor Vektoren bekannt sind ist es mit Gleichung \ref{eq:rui} einfach die Bewertung eines User f"ur ein Item abzusch"atzen.
+
+Diese Latent Factors m"ussen aus den gegebenen Bewertungen der User abgeleitet werden. Die Bewertungen k"onnen als Item-User Matrix dargestellt werden. In dieser Matrix sind die meisten Zellen leer, da es nicht zu allen Item User Kombinationen Bewertungen gibt. Zu Beginn der Matrixfactorization Technik f"ullt man alle Elemente der Latent Factor Vektoren $q_i, p_u \in \mathbb{R}^f$ mit Zufallszahlen ab. Mit den vorhandenen Bewertungen kann man berechnen wie gut das die angenommenen Latent Factos sind. F"ur eine vorhandene Bewertung berechnet man den Fehler den man macht wie folgt:
+
+\begin{equation}
+  \label{eq:error}
+  r_{ui} - q_i^T p_u
+\end{equation}
+
+$r_{ui}$ nennt man auch die Residuen. Die Summe aller Residuen soll minimiert werden.
+Die Berechnung der Residuen f"uhrt man f"ur alle gegebenen Bewertungen durch und berechnet die Summme.
+
+\begin{equation}
+\label{eq:errorsum}
+  \sum_{(u,i) \in \kappa} (r_{ui} - q_i^T p_u)
+\end{equation}
+
+$\kappa$ ist die Menge aller $(u,i)$-Paare f"ur eine explizite Bewertung gemacht wurde. Diese Menge wird auch Trainingset genannt.
+
+Das Ziel von Matrixfactorization ist es Gleichung \ref{eq:errorsum} zu minimieren. 
+
+\begin{equation}
+  \label{eq:objective}
+  \min_{q*,p*} \sum_{(u,i) \in \kappa} (r_{ui} - q_i^T p_u)
+\end{equation}
+
+Wenn man Gleichung \ref{eq:objective} minimiert, werden $q_i$ und $p_u$ so gew"ahlt, dass der Fehler f"ur die vorher bekannten Werte minimiert wird. Ziel des Recommender ist es aber den Fehler auch f"ur unbekannte Bewertungen m"oglichst klein zu halten und Overfitting zu vermeiden. Dieses Verhalten wird mit einem Regularisierungterm erreicht. Der Regularisierungsterm f"uhrt dazu, dass die Elemente von $q_i$ und $p_u$ nicht zu gross werden. Die Konstante $\lambda$ kontrolliert wie stark die Gleichung \ref{eq:objective} regularisiert wird \cite{koren2009}.
+
 \begin{equation}
   \label{eq:optimization}
-    R_{ui} - q_i^T p_u + \lambda (\lVert q \rVert^2 + \lVert p \lVert ^2)
+    r_{ui} - q_i^T p_u + \lambda (\lVert q \rVert^2 + \lVert p \lVert ^2)
 \end{equation}
-Bei Matrixfactorization geht es darum, dass man eine R, die d"unn besetzt ist, voll ausf"ullt.
+
 Damit die Elemente der Latent Factor Vectors nicht zu gross werden, werden sie reguliert.
+
+\subsection{Kostenfunktion}
+\label{sec:opt}
+
+Aus der Gleichung \ref{eq:optimization} kann man eine sogenannte Kostenfunktion oder Objectivefunction herleiten. Die Kostenfunktion nimmt als Argumente die Latent Factor Vectoren und gibt eine reele Zahl zur"uck. Umso kleiner diese Zahl ist umso besser sind die Parameter gew"ahlt. Die Kostenfunktion sieht folgendermassen aus:
+
+\begin{equation}
+  \label{eq:costfunction}
+  J(q_1, \dots , q_n, p_1, \dots, p_m) =  (r_{ui} - q_i^T p_u)^2 + \lambda (\lVert q \rVert^2 + \lVert p \lVert ^2)
+\end{equation}
  
-Um das Minimum zu finden kann beispielsweise das Verfahren Gradientenabstieg angewendet werden. Dazu wird die Kostenfunktion nach $q_i$ und nach $p_u$ abgeleitet. F"ur $q_i$ lautet die Ableitung:
+Um das Minimum zu finden kann beispielsweise das Verfahren Gradientenabstieg angewendet werden. Dazu wird die Kostenfunktion $J$ nach $q_i$ und nach $p_u$ abgeleitet. F"ur $q_i$ lautet die Ableitung:
 
 \begin{equation}
   \label{eq:decx}
-  \frac{ \partial }{ \partial q_i } = \sum (q_i^T p_i - r) q_i + \lambda p_i
+  \frac{ \partial J }{ \partial q_i } = \sum (q_i^T p_j - r) p_j + \lambda q_i
 \end{equation}
 
-F"ur die $p_i$ wird folgendermassen abgeleitet.
+Und f"ur die $p_i$ wird folgendermassen abgeleitet:
 
-\subsection{Funk's stochastic gradient descent}
+\begin{equation}
+  \label{eq:dectheta}
+  \frac{ \partial J }{ \partial p_i } = \sum (q_i^T p_j - r) q_j + \lambda p_i
+\end{equation}
+
+Es hat sich herausgestellt, dass das Verfahren des Gradientenabstiegs f"ur eine Ratingmatrix mit den Dimensionen 1682 x 943 nicht skaliert. Sobald man mehrere Iterationen durchf"uhrt dauert das Verfahren mehrere Stunden. Und wenn man zu wenige Iteration durchf"uhrt, werden die Paramter nicht befriedigend optimiert.
+
+Gradient Descent muss f"ur jeden Paramter in $J$ alle m"oglichen Fehler berechnen.
+
+\subsection{Funk's stochastischer Gradientabstieg}
 \label{sec:funksvd}
 
-Um die Gleichung \ref{eq:optimization} zu optimieren kann Funk's gradient descent eingesetzt werden.
+Statt des einfachen Gradient Descent wurde eine Variante der Gradient Descent Methode implementiert. Die Methode wurde von Simon Funk beschrieben \cite{funk}. Die Implementation basiert auf dieser Beschreibung.
+
+Funk's Stochastischer Gradientenabstieg iteriert durch alle User-Item Paare des Trainingsets. Mit den initialen Latent Factor Vektoren $q_i$ und $p_u$ wird f"ur jede Bewertung im Trainingset der Fehelr berechnet. Es ist einfach die Item-User Paare des Trainingsets abzufragen. Listing \ref{lst:trainingcases} zeigt die Implementation.
+
+\begin{lstlisting}[caption=Abfrage des Trainingsets,label=lst:trainingcases]
+import qualified Data.Matrix as M  
+trainingcases :: M.Matrix Double -> [(Int, Int)]
+trainingcases y = [(x2, x1) | x1 <- [1..(M.ncols y)], 
+         x2 <- [1..(M.nrows y)],
+         (M.getElem x2 x1 y) /= 0.0 ]
+\end{lstlisting}
 
 \begin{equation}
-  \label{eq:funksvd}
-  p_i \leftarrow p_i + \gamma (e_{iu} p_u + \lambda p_i)
+  \label{eq:error1}
+  e_{ui} = r_{ui} - q_i^T p_u
 \end{equation}
 
-\section{Evaluation}
-\label{sec:evaluation}
-
-\subsection{Daten}
-\label{sec:data}
-
-Ein Recommenderalgorithmus ben"otigt Daten um das Model zu erstellen. Diese Daten liegen oft in Form einer Matrix vor. Die Zeilen rep"asentieren Items und die Kolonnen User. In den Zellen steht welce Bewertung ein User einem Item gegeben hat. Diese Matrix nennt man Ratingmatrix.
-
-Die Daten f"ur Recommender Systeme k"onnen auf zwei unterschiedliche Arten beschafft werden.
-
-\begin{description}
-\item[Explizites Feedback] Bei explizitem Feedback verl"asst man sich auf Daten die User explizit eingegen haben. Beispielsweise werden User aufgefordert, dem System ihre Preferenzen anzugeben oder man pr"asentiert den User eine Reihe von Items, die er auf einer Skala von 1 bis 5 bewerten muss. Ein Problem von explizitem Feedback ist, dass es oft zu d"unn besetzten Ratingmatrizen f"uhrt, da die User keine Zeit haben um alle verf"ugbaren Items zu bewerten.
-\item[Implizites Feedback] Implizites Feedback leitet die Bewertungen der User f"ur Items aus Beobachtungen ab. Das System beobachtet die Interaktionen, wie zum Beispiel in Vergangheit gekaufte Artikel, Browsehistory, Suchanfragen oder Klickverhalten, des User mit dem System. Oft besteht implizites Feedback nur aus boolschen Werten. Das heisst entweder ein Ereignis ist eingetreten oder nicht.
-\end{description}
-
- Der User-based Collaborative Filtering Algorithmus berechnet zu jedem User-Item Paar eine "Ahnlichkeit und zu jedem User eine Nachbarschaft. Das System ben"otigt eine Ratings Matrix, die Auskunft dar"uber gibt, welche Bewertung die User den Items gegeben haben.
-
-F"ur das Projekt wurden die Daten von Movielens verwendet. MovieLens wurde von vom GroupLens Projekt an der Universit"at Minnesota entwickelt. Die Daten k"onnen von http://www.grouplens.org/node/12 heruntergeladen werden. 
-
-Das Datenset enth"alt die Bewertung von 943 User und 1682 Items.  Daten sind in Kolonnen strukturiert. Erste Kolonne user id, zweite item.id, dritte rating, vierte timestamp. Es enth"alt insgesamt 100000 Bewertungen. In diesem Projekt wurde das Set in 80000 Bewertungen f"ur die Lernphase und 20000 Bewertungen f"ur die Evaluierung aufgeteilt. 
-
-
-
-\subsection{Vorgehen}
-\label{sec:procedure}
-
-Um Evaluationsmetriken zu bestimmen werden die gegeben Daten in ein Trainings und ein Testset aufgeteilt. Das Model des Recommendersystem wird berechnet. Im Fall des User-based Collaborative Filtering werden f"ur alle User die "Ahnlichkeiten zu anderen User berechnet.
-
-\begin{figure}
-  \centering
-      \includegraphics[width=0.5\textwidth]{evaluation}
-  \caption{Collaborative Filtering Prozess}
-\end{figure}
-
-Die Bewertungen im Testset beinhalten den User $u$, das Item $i$ und die Bewertung pro Zeile. Mit dem berechneten Model muss der Recommender zu jedem $u$-$i$ Paar eine Bewertung vorhersagen. Diese Vorhersage vergleicht man mit dem tats"achlichen Bewertung aus dem Testset.
-
-\subsection{Evaluationsmetrik}
-\label{sec:evaluationmetrik}
-
-Die Qualit"at des Recommendersystem kann mit Evaluationsmetriken "uberpr"uft werden. Evaluationsmetriken geben Auskunft dar"uber wie gut das Recommendersystem ist. Idealerweise kann ein Recommendersystem die Bewertung f"ur einen User und ein Item vorhersagen. Statistische Genauigkeitsmetriken geben an wie weit entfernt die Vorhersage vom tats"achlichen Wert ist. 
-
-Es gibt verschieden Evaluationsmetriken. In diesem Projekt wurde der Mean Absolute Error als Metrik verwendet. MAE vergleicht die tats"achliche Bewertung eines User f"ur ein Item mit der Bewertung, die der Recommender berechnet hat. Man bildet die Differenz von Vorhersage und tats"achlicher Bewertung. Von der Differenz wird der Betrag berechnet. Schliesslich bestimmt man die mittlere Abweichung, indem man durch Anzahl Bewertungen $N$ im Testset teilt 
-
-Der MAE ist wie folgt definiert \cite{sarwar01}:
+Wenn man diese Gleichungen partiell nach $q_i$ und $p_u$ ableitet, erh"alt man folgende Formeln
 
 \begin{equation}
-  \label{eq:mae}
-  MAE = \frac{\sum_{i+1}^N | p_i-q_i | }{N}
+  \label{eq:devqi}
+  (r_{ui} - q_i^T p_u) * p_u =  e_{ui} * p_u
 \end{equation}
 
-Je tiefer der MAE, desto besser ist die Genauigkeit des Recommender.
+\begin{equation}
+  \label{eq:devpu}
+    (r_{ui} - q_i^T p_u) * q_i =  e_{ui} * q_i
+\end{equation}
 
-Root Mean Sqaured Error und Correlation sind zwei weitere Metriken.
+Bei der Methode des stochastischen Gradientenabstiegs passt man jede Parameter in der Richtung des Fehlers an. Die Richtungen der Fehler sind die Ableitungen aus Gleichung \ref{eq:devqi} und \ref{eq:devpu}. Die Parameter werden also wie folgt angepasst:
 
-\section{Resultate}
+\begin{equation}
+  \label{eq:assignpi}
+ q_i \leftarrow q_i + \alpha (e_{ui} * p_u)
+\end{equation}
+
+und
+
+\begin{equation}
+  \label{eq:assignqu}
+ p_u \leftarrow p_u + \alpha (e_{ui} * q_i)
+\end{equation}
+
+$\alpha$ ist eine Konstante. Sie bestimmt mit welcher schrittweite die Paramter angepasst werden. Mehrere Testl"aufe haben ergeben, dass $\alpha = 0.001$ ein geeigneter Wert ist, der mit wenigen Iterationen schnell zum Ziel f"uhrt.
+
+Die beiden Zuweisungen \ref{eq:assignpi} und \ref{eq:assignqu} werden f"ur alle Paare im Trainingset ausgef"uhrt. Bei jeder Zuweisung wird $e_{ui}$ neu berechnet. Daraus folgt, dass die beiden Zuweisung stark voneinander abh"angig sind.
+
+\subsubsection{Initialisierung}
+\label{sec:init}
+
+Der Algorithmus in Abschnitt \ref{sec:funksvd} geht davon aus, dass die Vektoren $q_i$ und $p_u$ bereits initialisiert sind. Dass heisst es ist n"otig, dass man eine Initialisierungstrategie f"ur die Vektoren hat. 
+
+Eine M"oglichkeit ist die Elemente der Vektoren mit 0.1 zu initialisieren. 
+
+Eine weitere M"oglichkeit die Featurevektoren zu initialisieren ist die leeren Zellen Ratingmatrix auszuf"ullen. M"ogliche Werte f"ur die Zellen liefern die Formeln der unpers"onliche Empfehlungstechniken aus Abschnitt \ref{sec:simple}. F"ur jede Zelle die keine Bewertung enth"alt wird 
+
+\begin{equation}
+  \label{eq:mu2}
+    b_{u,i} = \mu + b_u + b_i
+\end{equation}
+
+ausrechnet.
+
+Aus dieser vorberechneten Ratingmatrix kann man die Latent Faktor Vektoren mit einer Singul"arwertzerlegung gewinnen.
+
+\subsubsection{Regularisierung}
+\label{sec:regularization}
+
+Der Algorithmus in Abschnitt \ref{sec:funksvd} berechnet Featurevektoren, die das Trainingsset am besten approximieren. Das ist aber nicht gew"unschte Verhalten. Man m"ochte die Featurevektoren mit dem Trainingsset berechnen und sie sp"ater auf ein unbekanntes Set anwenden. Der Algorithmus berechnet Parameter, die sich auf das Trainingsset spezialisieren. 
+
+Um das zu vermeiden, werden die Featurevektoren regularisiert. Das heisst, dass grosse Werte in den Elementen zu einem hohen Wert der Kostenfunktion f"uhrt. Die Zuweisung wird mit Regularisierung erweitert:
+
+\begin{equation}
+  \label{eq:assign2}
+  q_i \leftarrow q_i + \alpha (e_{iu} p_u + \lambda q_i)
+\end{equation}
+
+\begin{equation}
+  \label{eq:assign3}
+    p_u \leftarrow p_u + \alpha (e_{iu} q_iu + \lambda p_u)
+\end{equation}
+
+$\lambda$ ist eine Konstante. Sie steuert die Regularisierung.
+
+\subsubsection{Implementation}
+\label{sec:sgdimpl}
+
+Die Berechnung der eines einzelnen Featurevektors kann in Haskell einfach implementiert werden. Listing \ref{lst:step} zeigt die Implementation. Das Modul \verb|Data.Vector| stellt den Typ \verb|Vector| zur Verf"ugung. Dieser implementiert die Operationen \verb|(Num a => a -> Vector a -> Vector a| und \verb|(+)::(Num a) => Vector a -> Vector a|.
+
+\begin{lstlisting}[caption=Berechnung eines Featurevektors, label={lst:step}]
+import Data.Vector 
+newqi :: Vector Double
+  -> Vector Double
+  -> Double
+  -> Vector Double
+newqi qi pu e = qi + alpha (e * pu - (lambda * pi))
+\end{lstlisting}
+
+Da die Datenstrukturen in Haskell immutable sind, k"onnen die Latent Faktor Vektoren $q_i$ und $p_u$ beim Updateschritt nicht einfach durch die neuen Werte ausgetauscht werden. Die Datenstruktur, die die Vektoren zusammenfasst, muss bei jedem Updateschritt neu erstellt werden. Dieser Umstand hat bei den ersten Implementation zur Lauftzeit oft eine "Out of Memory Exception" ausgel"ost. Das Problem konnte behoben werden, indem Maps statt Matrizen eingeseztzt werden. Die Maps werden bei jeder Iteration neu aufgebaut. Das heisst, es werden keine Update auf die Datenstruktur ausgef"uhrt sondern nur Inserts. Diese k"onnen in O(log n) ausgef"uhrt werden und ein Teil alten Datenstruktur kann wiederverwendet werden.
+
+\begin{lstlisting}[caption=Implementation Funk SGD, label=lst:sgd] 
+train :: Features
+      -> (Int,Int) 
+      -> M.Matrix Double 
+      -> Features
+train (x, theta) (i, u) y
+  = (updateRow i newqi x, updateRow u newpu theta)
+  where newqi = newqi oldqi oldpu error
+        newpu = newpu oldpu oldqi error
+        oldqi = M.lookup i 1 x
+        oldpu = M.lookup u 1 theta
+        error = eui2 (rui (i,u) y) oldqi oldpu  
+\end{lstlisting}
+
+\subsection{Resultate}
 \label{sec:results}
 
-In diesem Abschnitt werden die Resultate der Evaluierung pr"asentiert.
+In diesem Abschnitt werden die Resultate der Evaluierung der Matrixfaktorisierungmethode pr"asentiert.
 
-Um die implementieren Techniken zu evaluieren, werden sie mit Baselinealgorithmen verglichen. 
-Folgende Baselinealgorithmen wurden eingesetzt:
+Bei der Matrixfaktorisierung gibt es mehr Paramater als bei der Userbased Methode. Folgende Paramter k"onnen frei gew"ahlt werden.
 
 \begin{description}
-\item[globaler Durchschnitt] Der Durchschnitt aller Ratings
-\item[Item Durchschnitt] Der Durchschnitt aller Ratings f"ur ein Item
-\item[User Durchschnitt] Der Durchschnitt aller Ratings die ein User vergeben hat
+\item[$\lambda$] Bestimmt wie stark die Regularisierung Overfitting vermeiden soll
+\item[Anzahl Featuers] Bestimmt wieviele Elemente die Latent Faktor Vektoren haben
+\item[$\alpha$] Bestimmt die Schrittweite des Gradientenabstieg.
+\item[Anzahl Iterationen] Bestimmt wieviele Iterationen der Gradientenabstieg ausf"uhren soll
 \end{description}
 
+Abbildung \ref{fig:lambda} zeigt die Kreuzvalidierung f"ur den Paramter $\lambda$. Bei dieser Evaluation wurde die Anzahl Iterationen auf 20 gesetzt und $\alpha$ auf 0.001 und es wurde ein reduziertes Datenset mit 2 Features pro Latent Faktor Vektor verwendet.
+Bei dem gegebenen Datenset hat der Wert von 0.01 am besten funktioniert.
+\begin{figure}
+  \centering
+\begin{tikzpicture}
+  \begin{axis}[
+    title=Sensitiv"at von $\lambda$,
+    xlabel=$\lambda$,
+    ylabel=MAE,
+]
+\addplot table {lambda.data};
+  \end{axis}
+\end{tikzpicture}
+\label{fig:lambda}
+\caption{Kreuzvaliderierung von $\lambda$ mit $\alpha$ = 0.01 20 Iterationen und 2 Features}
+\end{figure}
+
+Folgende Parameter haben sich bei den Experimenten bew"ahrt.
+
+\begin{center}
+\begin{tabular}{lr}
+ Parameter           &  Wert  \\
+ Lambda              &  0.02  \\
+ Anzahl Iterationen  &    20  \\
+ Alpha               &  0.01  \\
+\end{tabular}
+\end{center}
+
+
+Abbildung \ref{fig:compare} zeigt einen Vergleich der verschiedenen Recommender Techniken, $b_{ui}$, Userbase Collaborative Filtering und Matrixfaktorisierung.
+
+\begin{figure}
 \begin{tikzpicture}
   \begin{axis}[
     xbar, xmin=0,
     width=12cm, enlarge y limits=0.5,
-    symbolic y coords = {Global-AVG,Item-AVG,User-AVG,Useruser,Useruserp, Matrixfactorization},
+    symbolic y coords = {$b_{ui}$,Userbased,Matrixfactorization},
     xlabel={MeanAbsoluteError},
     ytick = data,
     nodes near coords, nodes near coords align={horizontal},
     ]
-    \addplot coordinates {(1.044,Global-AVG) (0.930,User-AVG) (0.872,Item-AVG) (0.857,Useruser) (0.8404,Useruserp) (0.76,Matrixfactorization)};
+    \addplot coordinates {(0.87, $b_{ui}$) (0.84,Userbased) (0.76,Matrixfaktorisierung)};
   \end{axis}
 \end{tikzpicture}
+\centering
+\label{fig:compare}
+\caption{}
+\end{figure}
 
-Aus der Abbildung ist ersichtlich, dass der Fehler des Recommender bei Useruser am geringsten ist.
+Aus der Abbildung ist ersichtlich, dass der Fehler des Recommender bei Matrixfaktorisierung am geringsten ist.
 
-\section{Arbeitsspeicher Nutzung}
+\section{Implementationsdetails}
 \label{sec:ram}
 
-Bei einer Ratingmatrix r mit der Dimension von 1682 mal 943 konsumiert das Programm zu viel Arbeitsspeicher. Es werden 10GB angefordert. Profiling hat gezeigt die Fehler Berechnung viel Arbeitsspeicher konpsumiert.
+Dieser Abschnitt beschreibt Probleme die bei der Implementation aufgetreten sind und m"ogliche L"osungen.
+
+\subsection{Build System}
+\label{sec:cabal}
+
+Um das Projekt zu builden und die Abh"angikeiten aufzul"osen wurde Cabal eingesestzt. Cabal ein Packagin und Build System f"ur Haskell. In diesem Projekt wurde Cabal eingesetzt, weil Libraries des Package Repository Hackage eingesetzt wurden und Cabal kann Abh"angigkeiten zu Hackages Packages automatisch aufl"osen. Ausserdm verwaltet Cabal Projektmetadaten, wie Lizenz, Author, u.s.w.
+
+F"ur dieses Projekt wurden zwei unterschiedliche Projekte erstellt. userbased enth"alt den User based Collaborative Filtering Recommender. matrixfactorization enth"alt einen Recommender mit Matrixfaktorisierung.
+
+Bei einer Ratingmatrix r mit der Dimension von 1682 mal 943 konsumiert das Programm zu viel Arbeitsspeicher. Es werden 10GB angefordert. Profiling hat gezeigt die Fehler Berechnung viel Arbeitsspeicher konsumiert.
 
 \begin{equation}
   \label{eq:squareerror}
@@ -438,6 +797,13 @@ Bei einer Ratingmatrix r mit der Dimension von 1682 mal 943 konsumiert das Progr
 \end{equation}
 
 $\kappa$ ist die Menge aller User-Item Paare, f"ur die ein Rating bekannt ist.
+
+\section{Fazit und Ausblick}
+\label{sec:fazit}
+
+Die Technik Matrixfakorisierung liefert genauere Vorhersagen als Userbase Collaborativ Filtering. Im Gegensatz zu Userbase Collaborative Filtering ist das Verfahren schwieriger zu implementieren und zu handhaben. Bei Matrixfaktorisierung mit Gradientenabstieg m"ussen 4 Parameter von Hand optimiert werden.
+
+Die Implementierung von Funk's Gradientenabstiegverfahren hat sich als schwierig erwiesen. Da bei diesem Verfahren die Parametervektoren oft aktualisiert werden wird viel Speicher alloziert und der Garbage Collector muss andauernd aufr"aumen. Deshalb ist es sinnvoll zu pr"ufen, ob das Optimierungsverfahren Funks stochastischer Gradientenabstieg nicht durch ein Verfahren ersetzt werden kann, dass einfacher zu parallelisieren ist. Das Verfahren Alternating Root Squares w"urde sich hierf"ur anieten.
 
 \bibliographystyle{plain}
 \bibliography{a}
