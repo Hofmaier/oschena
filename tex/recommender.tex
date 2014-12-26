@@ -17,8 +17,16 @@ stringstyle=ttfamiliy
 }
 
 \maketitle
-
+\newpage
 \tableofcontents
+\newpage
+\begin{abstract}
+  Recommender Systeme nutzen Datenbanken mit Userpreferenzen, um dem User aus einer grossen Menge von Objekten, diejenigen zu empfehlen, die er noch nicht gesehen hat. Dieser Report konzentriert sich auf Collaborativ Filtering. Collaborative Filtering ist eine Klasse von Recommender, die Empfehlungen aufgrund von Preferenzen anderer User berechnet.
+In diesem Report werden zwei Collaborative Filtering Methoden beschrieben. Userbase Collaborative Filtering ist eine der ersten und intuitivsten Methoden. Matrixfaktorisierung ist eine weitere Methode, die an der Netflix Competition die besten Resultate lieferte.
+
+Die Algorithmen werden mit einer geeigneten Evaluation verglichen. Die Evaluation und die Algorithmen wurden in Haskell implementiert.
+
+\end{abstract}
 
 \section{Recommender-Problem}
 \label{sec:problem}
@@ -50,7 +58,7 @@ Es gibt zwei unterschiedliche Strategien f"ur Recommendersysteme: Content filter
 
 Bei Content based Filtering wird zu jedem Artikel und zu jedem User ein Profile erstellt. Dieses Profile enth"alt Informationen "uber die Eigenschaften von User und Item. Beispielsweise k"onnte man alle angebotenen Filme nach ihrer Genrezugeh"origkeit bewerten. Ein Film hat beispielsweise einen Action und einen Romantikanteil. User k"onnen angeben, ob sie lieber Action oder Romantik m"ogen. Content based Filtering sucht dann Filme, die am besten mit dem Userprofile matchen. Die Schwierigkeit an Content based Filtering ist das Erfassen von Daten zu jedem Item und zu jedem User. Jemand muss jeden Artikel im Angebot nach seinem Content bewerten.
 
-\subsection{Collaborative Filtering}
+\subsubsection{Collaborative Filtering}
 \label{sec:collaborativefiltering}
 
 Collaborative Filtering ist eine weitere M"oglichkeit das Re\-commender-Prob\-lem zu l"osen. Bei Collaborative Filtering wird das Verhalten von User in der Vergangenheit analisiert. Dabei werden Bewertungen oder Transaktionen angeschaut. Der Inhalt der Artikel ist egal. Da diese Strategie unab"angig vom Inhalt ist kann sie f"ur jedes beliebige Recommendersystem eingesetzt werden. Es kann also im e-Commerce sowie auch im Information Filtering eingesetzt werden.  Es wird vielen Webshops erfolgreich eingesetzt \cite{sarwar01}. 
@@ -187,7 +195,7 @@ Dieser Abschnitt beschreibt wie die Qualit"at der Algorithmen evaluiert wurde.
 \subsection{Daten}
 \label{sec:data}
 
-Ein Recommenderalgorithmus ben"otigt Daten um das Model zu erstellen. Diese Daten liegen oft in Form einer Matrix vor. Die Zeilen rep"asentieren Items und die Kolonnen User. In den Zellen steht welce Bewertung ein User einem Item gegeben hat. Diese Matrix nennt man Ratingmatrix.
+Ein Recommenderalgorithmus ben"otigt Daten um das Model zu erstellen. Diese Daten liegen oft in Form einer Matrix vor. Die Zeilen rep"asentieren Items und die Kolonnen User. In den Zellen steht welche Bewertung ein User einem Item gegeben hat. Diese Matrix nennt man Ratingmatrix.
 
 Die Daten f"ur Recommender Systeme k"onnen auf zwei unterschiedliche Arten beschafft werden.
 
@@ -196,11 +204,17 @@ Die Daten f"ur Recommender Systeme k"onnen auf zwei unterschiedliche Arten besch
 \item[Implizites Feedback] Implizites Feedback leitet die Bewertungen der User f"ur Items aus Beobachtungen ab. Das System beobachtet die Interaktionen, wie zum Beispiel in Vergangheit gekaufte Artikel, Browsehistory, Suchanfragen oder Klickverhalten, des User mit dem System. Oft besteht implizites Feedback nur aus boolschen Werten. Das heisst entweder ein Ereignis ist eingetreten oder nicht.
 \end{description}
 
- Der User-based Collaborative Filtering Algorithmus berechnet zu jedem User-Item Paar eine "Ahnlichkeit und zu jedem User eine Nachbarschaft. Das System ben"otigt eine sogenannte Ratingmatrix, die Auskunft dar"uber gibt, welche Bewertung die User den Items gegeben haben.
+ Der User-based Collaborative Filtering Algorithmus berechnet zu jedem User-Paar eine "Ahnlichkeit und zu jedem User eine Nachbarschaft. Das System berechnet die "Ahnlichkeiten auftrund der Ratingmatrix. Diese gibt Auskunft dar"uber, welche Bewertung die User den Items gegeben haben.
 
-F"ur das Projekt wurden die Daten von Movielens verwendet. MovieLens wurde von vom GroupLens Projekt an der Universit"at Minnesota entwickelt. Die Daten k"onnen von http://www.grouplens.org/node/12 heruntergeladen werden. 
+F"ur das Projekt wurden die Daten von Movielens verwendet. MovieLens wurde von vom GroupLens Projekt an der Universit"at Minnesota entwickelt. Die Daten werden mit einer Webanwendung gesammelt. User k"onnen Filme bewerten und MovieLens gibt den User darauf eine Top-N Empfehlungsliste. Die Daten k"onnen von http://www.grouplens.org/node/12 heruntergeladen werden. 
 
-Das Datenset enth"alt die Bewertung von 943 User und 1682 Items.  Daten sind in Kolonnen strukturiert. Erste Kolonne user id, zweite item.id, dritte rating, vierte timestamp. Es enth"alt insgesamt 100000 Bewertungen. In diesem Projekt wurde das Set in 80000 Bewertungen f"ur die Lernphase und 20000 Bewertungen f"ur die Evaluierung aufgeteilt. 
+Das Datenset enth"alt die Bewertung von 943 User und 1682 Items.  Daten sind in Kolonnen strukturiert. Erste Kolonne user id, zweite item.id, dritte rating, vierte timestamp. Es enth"alt insgesamt 100000 Bewertungen. In diesem Projekt wurde das Set in 80000 Bewertungen f"ur die Trainingsphase und 20000 Bewertungen f"ur die Evaluierung aufgeteilt.
+
+F"ur den Userbased Collaborative Filter Algorithmus wurden die Daten in das CSV-Format transfomiert. Das hat den Vorteil, dass man sie leichter einlesen kann.
+
+F"ur die Matrixfaktorisierung wurden die Daten in als Matrix abgespeichert. So muss das Programm nicht bei jedem Testlauf die Transformation von 100000 Bewertungen in eine Ratingmatrix vornehmen.
+
+Die Transformationen wurden mit einem Pythonscript vorgenommen.
 
 \subsection{Vorgehen}
 \label{sec:procedure}
@@ -728,6 +742,7 @@ Bei der Matrixfaktorisierung gibt es mehr Paramater als bei der Userbased Method
 
 Abbildung \ref{fig:lambda} zeigt die Kreuzvalidierung f"ur den Paramter $\lambda$. Bei dieser Evaluation wurde die Anzahl Iterationen auf 20 gesetzt und $\alpha$ auf 0.001 und es wurde ein reduziertes Datenset mit 2 Features pro Latent Faktor Vektor verwendet.
 Bei dem gegebenen Datenset hat der Wert von 0.01 am besten funktioniert.
+
 \begin{figure}
   \centering
 \begin{tikzpicture}
@@ -754,7 +769,6 @@ Folgende Parameter haben sich bei den Experimenten bew"ahrt.
 \end{tabular}
 \end{center}
 
-
 Abbildung \ref{fig:compare} zeigt einen Vergleich der verschiedenen Recommender Techniken, $b_{ui}$, Userbase Collaborative Filtering und Matrixfaktorisierung.
 
 \begin{figure}
@@ -762,12 +776,12 @@ Abbildung \ref{fig:compare} zeigt einen Vergleich der verschiedenen Recommender 
   \begin{axis}[
     xbar, xmin=0,
     width=12cm, enlarge y limits=0.5,
-    symbolic y coords = {$b_{ui}$,Userbased,Matrixfactorization},
+    symbolic y coords = {$b_{ui}$,Userbased,Matrixfaktorisierung},
     xlabel={MeanAbsoluteError},
     ytick = data,
     nodes near coords, nodes near coords align={horizontal},
     ]
-    \addplot coordinates {(0.87, $b_{ui}$) (0.84,Userbased) (0.76,Matrixfaktorisierung)};
+    \addplot coordinates {(0.87,$b_{ui}$) (0.84,Userbased) (0.76,Matrixfaktorisierung)};
   \end{axis}
 \end{tikzpicture}
 \centering
@@ -782,12 +796,133 @@ Aus der Abbildung ist ersichtlich, dass der Fehler des Recommender bei Matrixfak
 
 Dieser Abschnitt beschreibt Probleme die bei der Implementation aufgetreten sind und m"ogliche L"osungen.
 
+F"ur den Vergleich der beiden Algorithmen Userbased Collaborative Filtering und Matrixfaktorisierung wurden zwei Module geschrieben. Um die Empfehlungen zu Evaluieren wurde ein ausf"uhrbares Programm erstellt. Das ausf"uhrbare Programm liest die Trainingsdaten und Testdaten, erstellt ein Model und berechnet den Mean Absolute Error und schreibt diese auf den Standardoutput.
+
+\subsection{Projekstruktur}
+\label{sec:structur}
+
+F"ur dieses Projekt wurden in ein ausf"uhrbares Programm und mehrere Module aufgeteilt. Abbildung \ref{fig:structur} zeigt die Aufteilung.
+
+\begin{figure}
+  \centering
+      \includegraphics[width=0.5\textwidth]{structur}
+  \caption{Projektstruktur}
+  \label{fig:structur}
+\end{figure}
+
+\begin{description}
+\item[evaluaterecommender] Diese Modul ent"halt das ausf"uhrbare Programm. Es nutzt die Module Userbased und Matrixfactorisation um die Evaluation durchzuf"uhren. Der Programmcode f"ur die MAE Berechnung ist ebenfalls in diesem Modul enthalten.
+\item[Userbased] Das Modul Userbased enth"alt den User based Collaborative Filtering Recommender und die unpers"onlichen Algorithmen. Das Modul stellt die Funktion \verb|predict| und \verb|model| zur Verf"ugung
+\item[Matrixfactorization] Das Modul enth"alt einen Recommender der Matrixfaktorisierung nutzt.
+\item[FunkSVD] Der Optimierungalgorithmus von Simon Funk ist in diesem Modul implementiert.
+\end{description}
+.
+atrixfactorization enth"alt einen Recommender mit Matrixfaktorisierung. Der Optimierungsalgorithmus Funk's stochatischer Gradientenabstiegt wurde in ein separates 
+
 \subsection{Build System}
 \label{sec:cabal}
 
-Um das Projekt zu builden und die Abh"angikeiten aufzul"osen wurde Cabal eingesestzt. Cabal ein Packagin und Build System f"ur Haskell. In diesem Projekt wurde Cabal eingesetzt, weil Libraries des Package Repository Hackage eingesetzt wurden und Cabal kann Abh"angigkeiten zu Hackages Packages automatisch aufl"osen. Ausserdm verwaltet Cabal Projektmetadaten, wie Lizenz, Author, u.s.w.
+Um das Projekt zu builden und die Abh"angikeiten aufzul"osen wurde Cabal eingesesetzt. Die verwendete Version ist 1.20.0.2. Cabal ein Paketisierung und Build System f"ur Haskell. In diesem Projekt wurde Cabal eingesetzt, weil Libraries des Package Repository Hackage eingesetzt wurden und Cabal kann Abh"angigkeiten zu Hackages Packages automatisch aufl"osen. Ausserdm verwaltet Cabal Projektmetadaten, wie Lizenz, Author, u.s.w.
 
-F"ur dieses Projekt wurden zwei unterschiedliche Projekte erstellt. userbased enth"alt den User based Collaborative Filtering Recommender. matrixfactorization enth"alt einen Recommender mit Matrixfaktorisierung.
+\subsubsection{Sandboxing}
+\label{sec:sanboxing}
+
+Das Projekt wurde in einer sogenannten Sandbox erstellt. Wenn das Projekt in einer Sandbox erstellt wird, werden alle Abh"angigkeiten des Projekt in einer separaten Paketverwaltung installiert. Das hat den Vorteil, dass "Anderungen an der system globalen Paketverwaltung das Projekt nicht beinflussen. Der Befehl lautet:
+\begin{verbatim}
+cabal sandbox init
+\end{verbatim}
+
+\subsection{Daten einlesen}
+\label{sec:readio}
+
+Beim einlesen der Daten sollte mit \verb|ByteString| gearbeitet werden. Dieser Abschnitt beschreibt weshalb.
+
+Bei der Ausf"uhrung der Evaluation werden die Daten jedesmal vom Filesystem eingelesen. Das Modul Pelude bietet daf"ur die Funktion \verb|readFile:: FilePath -> IO String|. \verb|FilePath| ist ein Alias f"ur \verb|String|. Die Funktion nimmt einen Dateipfad und gibt eine IO Action zur"uck. Die IO Action liest den Inhalt des Files und bindet Resultat an einen String.
+
+Ein \verb|String| ist eine Liste. Listen werden Haskell lazy evaluiert. Ein File ist f"ur Haskell also nur eine Liste von Character. Wenn die Listen lazy evaluiert werden sind die Elemente darin nur ein Promise, dass das Element zur Verf"ugung steht, wenn es ben"otigt wird. Die Berechnung des Elements hat noch nicht stattgefunden. Das ist normalerweise kein Problem aber wenn diese Liste ein Stream von der Festplatte ist, ist das Einlesen vergleichweise langsam.
+
+Deshalb gibt es im Paket \verb|bytestring| die Datentypen \verb|Data.ByteString.Strict| und \verb|Data.ByteString.Lazy|. Die Strict-Version l"ost das Problem indem die ganze String in den Arbeitsspeicher eingelesen wird. \verb|Data.ByteString.Lazy| liest die ersten 64KB in den Arbeitsspeicher.
+
+Da die Trainings und Testdaten ca. 1.7MB gross sind, wurde f"ur dieses Project \verb|Data.ByteString.Strict| verwendet.
+
+Listing \ref{lst:readio} zeigt wie Daten mit einem ByteString eingelesen werden. Der ByteString wird danach der Funktion \verb|decode| "ubergeben. Das diese ein \verb|Either| wird ein m"oglicher Fehler in der Funktion \verb|toVec| abgefangen.
+
+\begin{lstlisting}[label={lst:readio},caption={Einlesen von Files mit ByteString}]
+import Data.Csv
+import qualified Data.Vector as V
+import qualified Data.ByteString.Lazy as Bl
+
+type Rating = (Int, Int, Double)
+
+basefile = "/home/lukas/oschena/ml-100k/base.csv"
+
+main = do
+  putStrLn "Loading Data"
+  c <- Bl.readFile basefile
+  let csvData = decode NoHeader c :: Either String (V.Vector Rating)
+  let v = toVec csvData
+  putStrLn $ "Number of Ratings: " ++ (show $ V.length v)
+
+toVec :: Either String (V.Vector Rating)
+      -> V.Vector Rating
+toVec (Left err) = error err
+toVec (Right v) = v
+\end{lstlisting}
+
+\subsection{Profiling}
+\label{sec:profiling}
+
+Bei den ersten Implementation der Collaborative Filtering Algorithmen ist es oft zu "Memory out of Bound" Exceptions gekommen oder das Programm ben"otigte zu viel Zeit. Um Probleme der Skalierbarkeit zu l"osen wurden Statistiken "uber das Verhalten der Algorithmen zur Laufzeit erstellt.
+
+Der GHC Compiler unterst"utzt Time und Memory Profiling. Der generierte Output zeigt, wieviel Zeit und Speicher eine Funktion verursacht. Das heisst jede Funktion hat ein sogennantes Kostencenter. Jedesmal, wenn die Funktion aufgerufen wird, werden Zeit und Memory zu den vorhandenen Werten im Kostencenter hinzugez"ahlt. Um die Werte in Kostencenter zu berechnen, generiert der Compiler zus"atlichen Code, der die Berechnung ausf"uhrt. Die zu analisierenden Programme m"ussen also mit der entsprechenden Compiler Option ausgef"uhrt werden.
+
+Es k"onnen nur Ausf"uhrbare Dateien analisiert werden. In diesem Projekt wurde das Programm \verb|evaluaterecommender| analisiert.
+
+Um das Profiling einzuschalten, m"ussen drei Compiler Optionen gesetzt werden. Die Optionen k"onnen im Cabalfile im ghc-options Property gesetzt werden.
+\begin{verbatim}
+executable evaluaterecommender
+  ghc-options:	-prof -fprof-auto -rtsopts
+\end{verbatim}
+\begin{description}
+\item[-prof] Profiling wird eingeschaltet
+\item[-fprof-auto] Alle Funktionen sind Kostencenter
+\item[-rtsopts] Erm"oglicht der Runtime Optionen mitzugeben
+\end{description}
+
+Alle verwendeten Pakete m"ussen mit der \verb|--enable-library-profiling|- Option kompiliert werden.
+
+Um das Programm zu Analisieren muss es mit der Runtime Option \verb|-p| bei Ausf"uhrung mitgegeben werden. Runtime Optionen k"onnen nach dem Progamm zwischen \verb|+RTS| und \verb|-RTS| mitgegeben werden.  
+
+\begin{verbatim}
+$ evaluaterecommender +RTS -p -RTS
+\end{verbatim}
+
+Das Programm generiert eine Textdatei \verb|evaluaterecommender.prof|. Diese teilt die Analyse in drei Teile auf.
+
+Im obersten wird beschrieben, wie lange die Ausf"uhrung gedauert hat und wieviel Speicher konsumiert wurde. Im zweiten Teil werden die Funktionen die am meisten Zeit und Speicher ben"otigen mit dem Prozentualen Anteil ausgelistet. Im letzen Teil wird das Aufrufabfolge der Funktionen in Form eines Baumes beschrieben.
+
+\begin{verbatim}
+	Wed Dec 24 15:05 2014 Time and Allocation Profiling Report  (Final)
+
+	evaluaterecommender +RTS -p -K100M -RTS
+
+	total time  =        0.74 secs   (741 ticks @ 1000 us, 1 processor)
+	total alloc = 1,259,391,232 bytes  (excludes profiling overheads)
+
+COST CENTRE   MODULE  %time %alloc
+
+error            Main     34.7   52.3
+updateRow2    Main     27.1   22.1
+trainingcases Main      7.8    0.6
+iter          Main      5.8    7.7
+predict       Main      3.6    4.2
+
+\end{verbatim}
+
+\subsection{Arbeitsspeicher}
+\label{sec:memory}
+
+
 
 Bei einer Ratingmatrix r mit der Dimension von 1682 mal 943 konsumiert das Programm zu viel Arbeitsspeicher. Es werden 10GB angefordert. Profiling hat gezeigt die Fehler Berechnung viel Arbeitsspeicher konsumiert.
 
@@ -804,6 +939,10 @@ $\kappa$ ist die Menge aller User-Item Paare, f"ur die ein Rating bekannt ist.
 Die Technik Matrixfakorisierung liefert genauere Vorhersagen als Userbase Collaborativ Filtering. Im Gegensatz zu Userbase Collaborative Filtering ist das Verfahren schwieriger zu implementieren und zu handhaben. Bei Matrixfaktorisierung mit Gradientenabstieg m"ussen 4 Parameter von Hand optimiert werden.
 
 Die Implementierung von Funk's Gradientenabstiegverfahren hat sich als schwierig erwiesen. Da bei diesem Verfahren die Parametervektoren oft aktualisiert werden wird viel Speicher alloziert und der Garbage Collector muss andauernd aufr"aumen. Deshalb ist es sinnvoll zu pr"ufen, ob das Optimierungsverfahren Funks stochastischer Gradientenabstieg nicht durch ein Verfahren ersetzt werden kann, dass einfacher zu parallelisieren ist. Das Verfahren Alternating Root Squares w"urde sich hierf"ur anieten.
+
+Mit Programmiersprache Haskell k"onnen die Recommender mit wenigen Zeilen Code implementiert werden. Das Package Repository Hackage bietet unter anderem Libraries f"ur den Umgang mit Matrizen und Vectoren. Es enth"alt auch Statistikpakete, die f"ur die Implementierung von Recommenender Systemen genutzt werden k"onnen.
+
+Da die verwendeten Datenstrukturen Immutable sind und die meisten Funktionen keinen Seiteneffekt haben, w"urde sich die Parallelisierung der Algorithmen anbieten.
 
 \bibliographystyle{plain}
 \bibliography{a}
