@@ -22,7 +22,7 @@ stringstyle=ttfamiliy
 \tableofcontents
 \newpage
 \begin{abstract}
-  Recommender Systeme nutzen Datenbanken mit Userpreferenzen, um dem User aus einer grossen Menge von Objekten, diejenigen zu empfehlen, die er noch nicht gesehen hat. Dieser Report konzentriert sich auf Collaborativ Filtering. Collaborative Filtering ist eine Klasse von Recommender, die Empfehlungen aufgrund von Preferenzen anderer User berechnet.
+ Recommender Systeme nutzen Datenbanken mit Userpreferenzen, um dem User aus einer grossen Menge von Objekten, diejenigen zu empfehlen, die er noch nicht gesehen hat. Dieser Report konzentriert sich auf Collaborativ Filtering. Collaborative Filtering ist eine Klasse von Recommender, die Empfehlungen aufgrund von Preferenzen anderer User berechnet.
 In diesem Report werden zwei Collaborative Filtering Methoden beschrieben. Userbase Collaborative Filtering ist eine der ersten und intuitivsten Methoden. Matrixfaktorisierung ist eine weitere Methode, die an der Netflix Competition die besten Resultate lieferte.
 
 Die Algorithmen werden mit einer geeigneten Evaluation verglichen. Die Evaluation und die Algorithmen wurden in Haskell implementiert.
@@ -31,7 +31,7 @@ Die Algorithmen werden mit einer geeigneten Evaluation verglichen. Die Evaluatio
 
 \section{Recommender-Problem}
 \label{sec:problem}
-Dieser Abschnitt beschreibt was ein Recommendersystem ist und weshalb es einen Mehrwert schaffen kann.
+Dieser Abschnitt beschreibt, was ein Recommendersystem ist und weshalb es einen Mehrwert schaffen kann.
 
 Konsumenten werden heute in vielen Bereichen mit einer un"uberschaubaren Anzahl an Kaufm"oglichkeiten konfrontiert. In einem Webshop f"ur B"ucher oder Filme ist es es f"ur den Konsumenten beispielsweise schwierig, alle Artikel im Angebot anzuschauen und aufgrund dieser Evaluation die besten Artikel auszuw"ahlen. Beim Recommender-Problem geht es darum aus einer Mengen von Artikel (Items) ein sortierte Liste mit den empfehlenswertesten Artikel f"ur einen spezifischen Kunden (User) zu erstellen. Recommender kommen vorallem dort zum Einsatz, wo pers"onlicher Geschmack bei der Bewertung von Artikel eine wichtige Rolle spielt.
 
@@ -216,41 +216,51 @@ Dieser Abschnitt beschreibt einfache, alternative, M"oglichkeiten relative gute 
 
 Um einem User Items zu empfehlen werden oft einfache Statistiken berechnet. Diese Methoden sind unpers"onlich. Das heisst die Top-N Empfehlungen sind nicht vom pers"onlichem Geschmack von $u$ abh"angig. Jeder User erh"alt die selben Empfehlungen. 
 
-Diese Technik wird in vielen Bereichen angewendet. Restaurantf"uhrer oder Filmkritikwebseiten erstellen oft Ranglisten, welche Restaurants oder Filme von allen Usern im Durchschnitt am besten bewertet werden. Items mit den h"ochsten Durchschnittswerten, werden dem User empfohlen.
+Diese Technik wird in vielen Bereichen angewendet. Restaurantf"uhrer oder Filmkritikwebseiten erstellen oft Ranglisten, welche Restaurants oder Filme von allen Usern im Durchschnitt am besten bewertet werden. Items mit den h"ochsten Durchschnittswerten, werden dem User empfohlen \cite{jannach11}.
 
-Die einfachste Methode eine unbekannte Bewertung abzusch"atzen, ist den Durschnitt aller Bewertungen zu berechnen.
+Die einfachste Methode eine unbekannte Bewertung $b_{i,i}$ abzusch"atzen, ist den Durschnitt aller Bewertungen zu berechnen.
 
 \begin{equation}
   \label{eq:avg}
   b_{u,i} = \mu
 \end{equation}
 
-Diese Methode kann noch erweitert werden, indem man die durchschnittliche Abweichung aller Bewertungen von $b_u$ und die durschnittliche Abweichung $bi$ von Item $I$ ber"ucksichtigt \cite{jannach11}.
+Wenn diese Methode wie in Abschnitt \ref{sec:procedure} evaluiert wird, erh"alt man einen MAE von 0.968. Dieser Wert kann noch weiter minimiert werden.
+
+Bestimmte User vergeben durchschnittlich tiefere Bewertungen. Diese Tendenz $b_u$ kann man f"ur jeden User berechnen. Man berechnet die Abweichung des Erwartungswertes $\mu$.
+
+\begin{equation}
+  b_u = \frac{1}{|I_u|}\sum_{i \in I_u}(r_{u,i} - \mu)
+\end{equation}
+
+Die Menge $I_u$ beinhaltet alle Items, die der User $u$ bewertet hat. $r_{u,i}$ ist die Bewertung die User $u$ Item $i$ gegeben hat.
+
+Die Abweichung $b_u$ wird bei der Vorhersage zu $\mu$ addiert, um bei der Evaluation einen besseren MAE zu erhalten.
 
 \begin{equation}
   \label{eq:bui}
-  b_{u,i} = \mu + b_u + b_i
+  b_{u,i} = \mu + b_u
 \end{equation}
 
-wobei
+Wenn man die Tendenz der User, Item durchschnittlich h"oher oder tiefer zu bewerten, ber"ucksichtig wie in der Gleichung \ref{eq:bui} beschrieben, kann man den MAE auf 0.8501 senken. 
 
-\begin{equation}
-  b_u = \frac{1}{|I_i|}\sum_{i \in I_u}(r_{u,i} - \mu)
-\end{equation}
-
-und 
+Items haben ebenfalls eine Abweichung vom Durchschnitt. Bestimmte Filme zum beispiel k"onnen tendenziel eine h"ohere Bewertung von allen Usern erhalten. Es kann also noch die Abweichung $bi$ jedes Items berechnet werden.
 
 \begin{equation}
   \label{eq:bi}
   b_i = \frac{1}{|U_i|}\sum_{u \in U_i}(r_{u,i} - b_u - \mu)
 \end{equation}
 
-Nach folgend bezeichnet $u$ den aktiven User und $i$ das Item, f"ur das man eine Vorhersage der Bewertung haben m"ochte. $b_ui$ bezeichnet die Absch"atzung f"ur die Bewertung von User $u$ f"ur Item $i$.
+Diese Abweichung addiert man zur Vorhersage $b_{ui}$.
 
 \begin{equation}
   \label{eq:baseline}
   b_{u,i} = \mu + b_u + b_i
 \end{equation}
+
+Wenn man die statistischen Abweichungen der einzelnen User und Items bei der Vorhersage einer Bewertung $b_{ui}$ wie in Gleichung \ref{eq:baseline} ber"ucksichtig, erreicht man einen MAE von 0.76814.
+
+$b_{ui}$ kann relativ einfach aufgrund der vergangen Bewertungen berechnet werden.
 
 Listing \ref{lst:baseline} zeigt die Implemenation der Baseline Algorithmen.
 
@@ -297,99 +307,140 @@ In Diagramm \ref{fig:maebaselines} werden die verschiedenen, unpers"onlichen Rec
 \end{figure}
 
 
-\section{Userbased collaborative filtering}
+\section{Userbased Collaborative Filtering}
 
-Die Technik user-based collaborative filtering ist auch als k-NN (nearest-neighbor) oder Memory-based collaborative filtering bekannt. Der GroupLens Usenet Articel Recommender verwendete als einer der ersten Recommender Systeme User-based collaborative Filtering. Ringo Musice Recommender und der Bell Core video Recommender verwenden auch user-based CF .
+Die Technik Userbased Collaborative Filtering ist auch als k-NN (nearest-neighbor) oder Memory-based Collaborative Filtering bekannt. Der GroupLens Usenet Articel Recommender verwendete als einer der ersten Recommender Systeme Userbased Collaborative Filtering. Ringo Music Recommender und der Bell Core Video Recommender verwenden auch Userbased CF \cite{ekstrand11}.
 
-User-base collaborative filtering kann in zwei Schritte aufgeteilt werden. 
+Userbased Collaborative filtering kann in zwei Schritte aufgeteilt werden. 
 
-\begin{enumerate}
-\item Nachbarschaft erstellen
-\item Aufgrund der Nachbarschaft 
-\end{enumerate}
+\begin{description}
+\item[Nachbarschaft bestimmen] F"ur jeden User $u$ wird eine Nachbarschaft $N \subseteq U$ erstellt. Diese Nachbarschaft enth"alt Tupel mit anderen Usern und deren "Ahnlichkeit $sim$ zu $u$. Die Nachbarschaft ist sortiert nach "Ahnlichkeit. Die Nachbarschaft wird aufgrund der Trainingsdaten erstellt. Sie stellt das Model von Userbased Collaborative Filtering dar. Wenn im zweiten Schritt eine unbekannte Bewertung abgesch"atzt wird, wird auf die vorberechneten Nachbarschaften zugegriffen.
+\item [gewichtetes Mittel bilden] Wenn man $N$ hat, nimmt man daraus $k$ "ahnliche User aus $N$, die das Item $i$ bewertet haben. F"ur alle User in $N$, multipliziert man das Rating des entsprechenden Users mit dem Wert seiner "Ahnlichkeit zu $u$. Dadurch werden Ratings von User, die sehr "ahnlich sind st"arker gewichtet. 
+\end{description}
 
-User base filtering sucht nach User, die "ahnlich sind. Eine Nachbarschaft besteht aus einem Subset von $ \mathnormal{U} $ Usern $N$, die die h"ochste "Ahnlichkeit aufweisen. Um die Nachbarschaft zu erstellen wird der aktive User mit allen anderen Usern verglichen. Zu jedem Paar wird ein Wert f"ur die "Ahnlichkeit berechnet.
+Userbased Collaborative Filtering sucht nach User, die "ahnlich wie der aktive User $u$ sind. Um das Model zu erstellen, werden die vergangene Bewertungen der User verwendet.
 
-Bespielsweise m"ochte man die Bewertung von User Peter f"ur den Film "Titanic", den Peter noch nicht bewertet hat, vorhersagen. Man sucht nach anderen Usern die Filme "ahnlich bewerten wie Peter. Dazu analisiert man Filme die Peter und andere User bewertet haben. Um die gesuchte Sch"atzung zu erhalten eribt sich aus den gewichteten Wertungen dieser "ahnlichen User. Die Bewertung f"ur Titanic con Usern die Peter sehr "ahnlich sind haben ein gr"osseres Gewicht als die Bewertungen von Usern die Peter unahnlich sind oder sie werden gar nicht ber"ucksichtigt.
+Die Technik um "ahnliche User zu finden heisst k- Nearest-Neighbors (kNN). 
 
-Die Technik um "ahnliche User zu finden heisst kNN (k neirest neighbors). 
+\subsection{Informelles Beispiel}
+\label{sec:example}
 
-\subsection{"Ahnlichkeit}
+Bespielsweise m"ochte man die Bewertung von User Peter f"ur den Film "Titanic", den Peter noch nicht bewertet hat, vorhersagen. Man sucht nach anderen Usern, die Filme "ahnlich bewerten wie Peter. Dazu beschaftt man sich f"ur jeden anderen User eine Liste aller Filme, die Peter und andere User bewertet haben. So findet man heraus welche $k$ User Peter am "ahnlichsten sind. Das ist seine Nachbarschaft $N$. Um vorherzuagen welche Bewertung Peter Titanic gibt, verwendet man die Bewertungen der User in $N$. Wenn "ahnliche User Titanic eine hohe Bewertung geben wird eine hohe Bewertung von Peter vorhergesagt. Die Bewertung f"ur Titanic con Usern die Peter sehr "ahnlich sind haben ein gr"osseres Gewicht als die Bewertungen von Usern die Peter un"ahnlich sind.
 
-Dieser Abschnitt beschreibt, wie die "Ahnlichkeit zwischen zwei User berechnet wird. 
 
-Es gibt mehrere M"oglichkeiten die "Ahnlichkeit zwischen zwei User zu evaluieren. F"ur die Distanz oder die "Ahnlichkeit gibt es verschiedene Metriken. 
+\subsection{Nachbarschaft bestimmen}
+\label{sec:neigborhood}
 
-Es ist nur m"oglich die "Ahnlichkeit zwischen 2 User zu berechnen, wenn es ein Subset der Items gibt, die beide User bewertet haben. Wenn dieses Subset leer ist, k"onnen die nachfolgenden Methoden nicht angewendet werden. Der Recommender wurde so implementiert, dass User die keine gemeinsamen Items haben als un"ahnlich bewertet werden.
+Dieser Abschnitt beschreibt, wie die Nachbarschaft  $N \subseteq U$ eines einzelnen Users $u$ erstellt wird. Eine Nachbarschaft ist eine sortierte Liste von Usern. Sie ist nach der "Ahnlichkeit $sim(u,v)$ sortiert.  Der Wert $sim(u,v)$ ist ein Model der "Ahnlichkeit zwischen dem aktiven User und einem anderen User $v$. Zuerst wird beschrieben, wie $sim(u,v)$ definiert werden kann.
 
-Wenn es keinen User gibt, der das selbe Item bewertet hat, ist der Korrelationskoeffizient -1.
-Die Pearson Similarity ber"ucksichtigt nur gemeinsam geratete Daten.
-Was passiert wenn zwei User ein einziges gemeinsames Item haben und dieses gleich bewerten?
+Es gibt mehrere M"oglichkeiten die "Ahnlichkeit zwischen zwei User zu evaluieren. In diesem Report werden zwei Metriken beschrieben
+
+\begin{itemize}
+  \item Pearson Korrelation 
+  \item euklidische Distanz
+\end{itemize}
+
+
+Es ist nur m"oglich die "Ahnlichkeit zwischen 2 User zu berechnen, wenn es ein Subset der Items gibt, die beide User bewertet haben. Wenn dieses Subset leer ist, k"onnen die nachfolgenden Methoden nicht angewendet werden. Der Recommender wurde so implementiert, dass User, die keine gemeinsamen Items haben einen A"hnlichkeitswert von 0 haben. Das heisst, dass die Bewertungen dieser User keinen Einfluss auf die berechnung der unbekannten Bewertung haben. 
+
+Listing \ref{lst:shareditems} zeigt, wie sich das Programm eine Liste aller gemeinsamen Items beschafft. Die Funktion \verb|shareditems| gibt nimmt zwei User und eine MultiMap und gibt alle gemeinsamen Items zur"uck. 
+
+\begin{lstlisting}[caption=Implementation von shareditems, label=lst:shareditems]
+shareditems :: User -> User -> Multimap User Item -> [Items]
+shareditems u1 u2 m = shared (lookup u1 m) (lookup u2 m)
+  where shared l1 l2 = [x| x <- l1, y <- l2, x == y]
+\end{lstlisting}
 
 \subsubsection{Pearson Korrelation}
 \label{sec:pearsoncorrelation}
 
-Um zwei User miteinander zu vergleichen, kann die Pearson Similarity eingesetzt werden.
-
-Wenn man zwei User mit dem Pearson Korrelationskoeffizient vergleichen m"ochte, muss man zuerst alle Items finden die beide User bewertet haben. Wenn die beiden User alle gemeinsamen Items gleich bwertet haben, sind sie sich "ahnlich.
-
-Die Pearson Similariy ber"ucksichtig User die Items konstant tiefer bewerten. Wenn man zwei User die mit den Vektoren (1,2,3,4) und (2,3,4,5) dargestellt werden erhalten die maximale "Ahnlichkeit von 1.
+Gem"ass \cite{jannach11} eignet sich die sogennante Pearson Korrelation gut f"ur Userbased CF. Die Pearsonkorrelation, oder Korrelationskoeffizient ist ein dimensionsloses Mass f"ur den linearen Zusammenhang von zwei Listen. Der Korrelationskoeffizient nimmt Werte zwischen -1 und +1 an. +1 bedeutet, dass die Listen sehr "ahnlich sind. -1 bedeutet dass sie un"ahnlich sind. Bei 0 besteht kein Zusammenhang. Die Pearson Korrelation ist folgendermassen definiert.
 
 \begin{equation}
- sim(u,v) = \frac{cov(X,Y}{\sigma_X \sigma_Y)} = \frac{(r_{u,i} - \bar{r}_u)(r_{v,i} - \bar{r}_v)}{r_{v,i} - \bar{r}_v}    
+ sim(u,v) = \frac{cov(X,Y}{\sigma_X \sigma_Y)} 
 \end{equation}
-
-Wenn man diese Formel auf den Vergleich von zwei Usern anwendet, kommt folgendes heraus.
+oder
 \begin{equation}
- sim(u,v) = \frac{\sum_{i \in I_u \cap I_v} (r_{u,i} - \bar{r}_u)(r_{v,i} - \bar{r}_v)}{\sqrt{\sum_{i \in I_u \cap I_v}(r_{u,i} - \bar{r}_u)^2}\sqrt{\sum_{i \in I_u \cap I_v}(r_{v,i} - \bar{r}_v)^2}}
+  \label{eq:pearson}
+  sim(u,v)  = \frac{\sum_{i \in I_u \cap I_v}(r_{u,i} - \bar{r}_u)(r_{v,i} - \bar{r}_v)}{\sqrt{\sum_{i \in I_u \cap I_v}( r_{v,i} - \bar{r}_v)^2}\sqrt{\sum_{i \in I_u \cap I_v}( r_{v,i} - \bar{r}_v)^2}}
 \end{equation}
 
-Bei der verwendung der Pearson Korrelation treten mehrere Schwierigkeiten auf.
+Die Pearson Similariy ber"ucksichtig User, die Items konstant tiefer bewerten. Wenn man zwei User die mit den Vektoren (1,2,3,4) und (2,3,4,5) dargestellt werden erhalten die maximale "Ahnlichkeit von 1.
 
-Die Berechnung Pearson Korrelation zwischen zwei Usern die nur ein Item gemeinsam bewertet haben f""uhrt zu relativ hohen "Ahnlichkeitswerten, obwohl zwei User die nur ein gemeinsames Item haben eher un"ahnlich sind.
+Um die Pearson Korrelation zu berechnen muss man sich zuerst die Liste $I_u \cap I_v$ mit den gemeinsam bewerteten Items beschaffen. Diese Item bildet man auf die Bewertungen der entsprechenden User ab. Listing \ref{lst:item2rating} zeigt die Implementation der Abbildung. Wenn man diese beiden Listen mit Bewertungen hat, kann man die "Ahnlichkeit berechnen.
 
-Wenn aller gemeinsamen Items 0 ist. Das heisst wenn alle gemeinsamen Items von einem User gleich beweret wurde, der Nenner 0 und somit ist die Pearson Korrelation nicht definiert.
+\begin{lstlisting}[caption=Implementation: Abbildung Items zu Bewertungen, label=lst:item2rating]
+import Data.MultiMap
+item2rating:: [Item] -> Multimap Item Double -> [Double]
+item2rating is m = map (\i -> findWithDefault 0 i m) is
+\end{lstlisting}
 
-F"ur die Berechnung des Pearson Korrelationskoeffizienten wurde das bestehende Modul Math.Statistics eingesetzt. Listing \ref{lst:similarity} zeigt die Implementation der Similarityfunktion in Haskell.
+Das Paket \verb|Math.Statistics| stellt die Funktion \verb|pearson| zur Verf"ugung um den Korrelationskoeffizenten zu berechnen.
 
-Die Funktion \verb|pearson :: Floating a=>[a]->[a]->a| berechnet den Pearson Korrelations Koeffizienten.
+Bei der Verwendung der Pearson Korrelation sind mehrere Schwierigkeiten bei der Evaluation aufgetreten.
+
+\begin{description}
+\item[Hohe "Ahnlichkeit bei wenig Items] Die Berechnung Pearson Korrelation zwischen zwei Usern, die nur ein Item gemeinsam bewertet haben f""uhrt zu relativ hohen "Ahnlichkeitswerten, obwohl zwei User die nur ein gemeinsames Item haben eher un"ahnlich sind.
+\item[Abweichung 0] Wenn die Bewertungen eines Users f"ur alle gemeinsame Items  $I_u \cap I_v$ gleich sind f"uhrt das zu einer Standardabweichung von 0. Da in diesem Fall der Nenner in Gleichung \ref{eq:pearson} wird, ist der Korrelationskoeffizient nicht definiert, wenn ein User alle gemeinsamen Items gleich Bewertet.
+\item[Nur ein gemeinsamens Item] Wenn  $I_u \cap I_v$ nur ein gemeinsames Item enth"alt ist die Standardabweichung immer 0.
+\end{description}
+
+In einem ersten Versuch wurden, die oben genannten Probleme durch entsprechende Fallunterscheidung in der Implementation abgefangen. Listing \ref{lst:similarity} zeigt die Implementation.
 
 \begin{lstlisting}[caption=Similarity, label=lst:similarity]
-similarity :: User -> User -> Maybe Double
-similarity u v = Statistics.pearson r1 r2
-                 where (r1, r2) = ratings
+import Math.Statistics
 
-ratings::User->User->([Double],[Double])
-rarings u1 u2=(lookupR u1 shared, lookupR u2 shared)
-  where shared = shareditems u1 u2
+similarity :: [Double] -> [Double] -> Double
+similarity r1 r2
+  | (length r1) < 2 = 0
+  | (length r2) < 2 = 0
+  | stddev r1 == 0.0 = 0
+  | stddev r2 == 0.0 = 0
+  |  otherwise = MS.pearson r1 r2
 
-lookupR::User->[Item]->Maybe[Double]
-lookupR u is = do
-  ratingmap <- lookup u useritemMap
-  foldl (\acc x -> (lookup x ratingmap):acc) [] is
 \end{lstlisting}
 
-Um die Similarity zwischen zwei User zu berechnen muss der \verb|pearson| Funktion die Ratings aller gemeinsamen bewerteten Items "ubergeben. In einem ersten Schritt muss eine Liste mit Items, die beide User \verb|u1| und \verb|u2| erstellt werden. Die Funktion \verb|shareditems| gibt eine Liste mit Items zur"uck die beide User bewertet haben. Listing \ref{lst:shareditems} zeigt die Implementation von \verb|shareditems|.
+Wenn die Varianz der betrachteten Bewertungen 0 ist, gibt diese Implementation einen "Ahnlichkeitswert von 0 zur"uck. 0 bedeutet, dass es keine Korrelation zwischen den beiden Usern gibt.
 
-\begin{lstlisting}[caption=shareditems, label=lst:shareditems]
-shareditems :: User -> User -> [Item]
-shareditems u1 u2==[x|i1<-is1,i2<-is2,x == y]
-  where is1=lookup u1 itemMap
-        is2=lookup u2 itemMap
-\end{lstlisting}
-n
-Sobald man die gemeinsam bewerteten Items hat und die dazugeh"origen Bewertungen der User kann man die Bewertungen der \verb|pearson|-Funktion "ubergeben. Diese gibt die "Ahnlichkeit der User $u$ und $v$ zur"uck. Die "Ahnlichkeit wird mit einer Gleitkommazahl zwischen -1 und 1 ausgedr"uckt. 1 bedeuted sie sind gleich. -1 bedeutet sie sind sich un"ahnlich.
+Diese Implementation der "Ahnlichkeit hat zu einem MAE von 0.830 gef"uhrt. Das ist ein gr"osserer MAE als man mit dem unpers"onlichen Recommender, der Gleichung \ref{eq:baseline} anwendet aus Abschnitt \ref{sec:simple}, erreicht. Das Resulat ist also noch unbefriedigend.
+
+
+\subsubsection{Optimierte Pearson Korrelation}
+\label{sec:optpearson}
+
+Ein Grund f"ur die Probleme ist, dass der definierte Korrelationskoeffizient aus Gleichung \ref{eq:pearson} nur die Bewertungen der gemeinsamen Items  $I_u \cap I_v$ bei der Berechnung der "Ahnlichkeit ber"ucksichtigt. F"ur die Standardabweichugen der Bewertungen der User macht es aber mehr Sinn alle Bewertungen des Users zu ber"ucksichtigen. Statt 
+
+\begin{equation}
+  \label{eq:naiv}
+  \sqrt{\sum_{i \in I_u \cap I_v}( r_{v,i} - \bar{r}_v)^2}
+\end{equation}
+
+macht es mehr sind das Mittel alle $b_u$ (siehe Abschnitt \ref{sec:simple}, Gleichung \ref{eq:baseline}) aller Bewertungen des User $u$ zu verwenden. Also
+
+\begin{equation}
+  \label{eq:naiv}
+  \sqrt{\sum_{i \in I_u \cap I_v}( r_{v,i} - b_u)^2}
+\end{equation}
+
+In die Gleichung \ref{eq:pearson} eingesetzt, berechnet sich die "Ahnlichkeit folgendermassen:
+
+\begin{equation}
+  \label{eq:advanced}
+  sim(u,v)  = \frac{\sum_{i \in I_u \cap I_v}(r_{u,i} - b_u)(r_{v,i} - b_v)}{\sqrt{\sum_{i \in I_u \cap I_v}( r_{v,i} - b_u)^2}\sqrt{\sum_{i \in I_u \cap I_v}( r_{v,i} - b_v)^2}}
+\end{equation}
+
+Da statt der Standardabweichung $b_u$ verwendet wird kann nicht mehr die \verb|pearson|-Funktion aus dem Statistik Paket verwendet werden. Die "Ahnlichkeitsfunktion wurde anpasst implementiert.
 
 \subsubsection{Euklidische Distanz}
 \label{sec:euclid}
 
-Da der Pearson Korrelations Koeffizient nicht definiert ist, wenn die Varianz 0 ist wird in diesem Fall eine alternative Distanzmetrik angewendet. Die euklidische Distanz ist auch definiert wenn die Varianz 0 ist.
+Der Pearson Korrelationkoeffizient ist nicht definiert ist, wenn die Varianz der betrachteten Bewertungen 0 ist. Deshalb wurde eine alternative "Ahnlichkeitmetrik untersucht. \cite{segaran} schl"agt vor die euklidische Distanzmetrix f"ur Usebased Collaborative Filtering zu verwenden. Die euklidische Distanz ist auch definiert wenn die Varianz 0 ist.
 
-Jede Wertung entspricht dem Wert einer Dimension. Die euklidische Distanz berechnet einfach den geometischen Abstand.
+Jeder User wird als Vektor dargestellt. Die Bewertungen, die der User gemacht hat, sind die Elemente des Vektor. Die euklidische Distanz berechnet den geometischen Abstand der Vektoren. F"ur zwei User $u$ und $v$ mit $n$ gemeinsamen Items, wird die $sim(u,v)$ wie folgt berechnet:
 
 \begin{equation}
   \label{eq:euclid}
- sim(u,v) = \sum_i^n (u_i - p_i )^2
+ sim(u,v) = \sum_i^n (u_i - v_i )^2
 \end{equation}
 
 Die euklidische Distanz ber"ucksichtigt nicht, dass bestimmte User permanent h"ohere Wertungen geben.
@@ -397,24 +448,40 @@ Die euklidische Distanz ber"ucksichtigt nicht, dass bestimmte User permanent h"o
 \subsection{Unbekannte Bewertung absch"atzen}
 \label{sec:compp}
 
-Sobald man die "Ahnlichkeiten zwischen allen Usern ausgerechnet hat, kann man f"ur einen User $u$ und ein Item $i$, eine Bewertung oder die Wahrscheinlichkeit, dass der User das Item kaufen w"urde, absch"atzen.
+In diesem Abschnitt wird beschrieben, wie die Nachbarschaft von Abschnitt \ref{sec:neigborhood} genutzt werden kann, um eine unbekannte Bewertung des aktiven User $u$ f"ur ein Item $i$ vorauszusagen.
 
-Die Berechnung kann in zwei Schritte aufgeteilt werden:
-\begin{description}
-\item[Nachbarschaft bestimmen] F"ur User $u$ wird eine Nachbarschaft $N \subseteq U$ erstellt. Diese Nachbarschaft enth"alt Tupel mit anderen Usern und deren "Ahnlichkeit zu $u$. Die Nachbarschaft ist sortiert nach "Ahnlichkeit. Die Nachbarschaft wird aufgrund der Trainingsdaten erstellt. Sie stellt das Model von user-based Collaborative Filtering dar. Wenn im zweiten Schritt eine unbekannte Bewertung abgesch"atzt werden soll wird auf die vorberechneten Nachbarschaften zugegriffen.
-\item [gewichtetes Mittel bilden] Wenn man $N$ hat, nimmt man daraus $k$ "ahnliche User aus $N$, die das Item $i$ bewertet haben. F"ur alle User dieser Schnittmenge, multipliziert man das Rating des entsprechenden Users mit dem Wert der Similarity zu $u$. Dadurch werden Ratings von User, die sehr "ahnlich sind st"arker gewichtet. Man berechnet den Durchschnitt dieser Ratings. Um die gesch"atzte Bewertung zu normieren, wird die Summe der gewichteteten Bewertungen durch die Summe aller Gewichte geteilt. Gleichung \ref{eq:computeprediction} beschreibt die Berechnung von $p_{u,i}$ formel.
-\end{description}
+\subsubsection{Nachbarschaft generieren}
+\label{sec:generate}
 
-M"ochte man f"ur einen User $u$ f"ur ein bestimmtes Item $i$, das er noch nicht bewertet hat, eine Bewertung vorhersagen, kann man also folgende Formel anwenden.
+M"ochte man zu User $u$ und Item $i$ eine Bewertung vorhersagen, ben"otigt man eine geeignete Nachbarschaft $N \subseteq U$. User in $N$ m"ussen das Item $i$ bewertet haben und dem User $u$ m"oglichst "ahnlich sein.
+
+Zuerst beschafft man sich die komplette Nachbarschaft eines User. Aus dieser Nachbarschaft filtert man diejenigen User, die das Item $i$ bewertet haben. Die gefilterte Liste wird aufsteigend nach der "Ahnlichkeit $sim(u,v)$ sortiert. Diese Liste entspricht $N$. 
+
+In Listing \ref{lst:neighborhood} wird gezeigt, wie die Abfrage in Haskell implementiert wurde. Die Funktion \verb|neighborhood| nimmt neben dem User $u$ und dem Item $i$ noch eine Ganzahl $k$ als Paramater. $k$ bestimmt die Gr"osse der Nachbarschaft, die f"ur die Vorhersage verwendet wird.
+
+\begin{lstlisting}[caption=Funktion um die Nachbarschaft f"ur ein User und ein Item zu generieren, label=lst:neighborhood]
+import Data.MultiMap
+neihborhood :: User
+            -> Item
+            -> Int
+            -> MultiMap User [(Similarity, User)]
+            -> [User]
+neihborhood u i k m = take k (reverse (sort onlyItem i u ))
+  where onlyItem i = filter (hasRated i) allneighbors
+        allneighbors = lookup u m
+\end{lstlisting}
+
+Bei der Berechnung von $p_{u,i}$ kann die Gr"osse der Nachbarschaft $N$ frei gew"ahlt werden. Die Gr"osse der Nachbarschaft ist definiert als Parameter $k$. Wenn $k$ zu klein ist, werden nur wenige Bewertungen von anderen User zu Berechnung verwendet. Da $p_{u,i}$ in diesem Fall nur von wenigen anderen Usern abh"angig ist, ist es anf"allig f"ur Ausreisser. Wenn $k$ zu gross gew"ahlt wird, werden auch die Bewertungen der User die dem aktiven User un"ahnlich sind ber"ucksichtigt. Diese Bewertungen sind f"ur den aktiven User nicht interessant. 
+
+\subsubsection{Unbekannte Bewertung berechnen}
+\label{sec:predict}
+
+Wenn man $N$ generiert hat, kann man damit eine unbekannte Bewertung $p_{u,i}$ absch"atzen. Jeden User $u' \in N$ bildet man auf das Produkt der "Ahnlichkeit $sim(u,u')$ mit der Bewertung $r_{u',i}$ ab. Die Werte der Abbildung werden summiert. Damit man eine Zahl zwischen 1 und 5 erh"alt wird diese Summe normiert. Die Summe wird mit der Summe aller "Ahnlichkeitswerte $\sum_{u' \in N}{|s(u,u')|}$ normiert. Gleichung \ref{eq:computeprediction} beschreibt die Berechnung von $p_{u,i}$ formel.
 
 \begin{equation}
   \label{eq:computeprediction}
-  p_{u,i} = \frac{\sum_{u' \in N}{s(u,u') r_{u',i}}}{\sum_{u' \in N}{|s(u,u')|}}
+  p_{u,i} = \frac{\sum_{u' \in N}{sim(u,u') r_{u',i}}}{\sum_{u' \in N}{|s(u,u')|}}
 \end{equation}
-
-$N$ sind alle User, die das Item $i$ bewertet haben. $s$ ist eine Funktion die einen Wert f"ur die "Ahnlichkeit zwischen dem gew"unschten User $u$ und dem User $u'$ in der Nachbarschaft $N$ bestimmt.
-
-Bei der Berechnung von $p_{u,i}$ kann die Gr"osse der Nachbarschaft $N$ frei gew"ahlt werden. Die Gr"osse der Nachbarschaft ist definiert als Parameter $k$. Wenn $k$ zu klein ist, werden nur wenige Bewertungen von anderen User zu Berechnung verwendet. Da $p_{u,i}$ in diesem Fall nur von wenigen anderen Usern abh"angig ist, ist es anf"allig f"ur Ausreisser. Wenn $k$ zu gross gew"ahlt wird, werden auch die Bewertungen der User die dem aktiven User un"ahnlich sind ber"ucksichtigt. Diese Bewertungen sind f"ur den aktiven User nicht interessant. 
 
 Die Implementation der Gleichung \ref{eq:computeprediction} ist in Listing \ref{lst:knnpredict} dargestellt. Die Funktion \verb|predict| nimmt User, Item, Model und $k$ als Argument. Das Model enth"alt die vorberechneten Nachbarschaften. Die Funktion \verb|knn| greift darauf zu und stellt die Nachbarschaft f"ur den aktiven User und dem gew"unschten Item zusammen.
 
@@ -424,49 +491,97 @@ Die Implementation der Gleichung \ref{eq:computeprediction} ist in Listing \ref{
    -> Model
    -> Int
    -> Double
-predict user item model k = rating / normalization
-  where neighborhood = knn user item model k
-        normalization = sum [ s | (s,_,_) <- neighborhood]
-        rating = sum [s * r | (s, r, u) <- neighborhood]
+predict u i k m = rating / normalization
+  where n = neighborhood u i k m
+        normalization = sum [ s | (s,_,_) <- u i k m]
+        rating = sum [s * r | (s, r, u) <- u i k m]
 \end{lstlisting}
+
+Bei der Evaluation hat sich herausgestellt, dass die Anwedung von Gleichung \ref{eq:computeprediction} zur Absch"atzung von unbekannten Bewertungen schlechte Resultate liefert. Die Methode erreichte einen MAE von 1.0514. 
+
+Die Methode kann optimiert werden, indem man nur die Abweichung aller der Bewertung von einem User mittel ber"ucksichtig. Die Abweichung ist
+\begin{equation}
+  \label{eq:dev2}
+r_{u',i} - \bar{r_{u'}}
+\end{equation}
+
+Wenn man das in die Gleichung \ref{eq:computeprediction}einsetzt erh"alt man
+
+\begin{equation}
+  \label{eq:optcomputeprediction}
+  p_{u,i} = \frac{\sum_{u' \in N}{sim(u,u') (r_{u',i} - \bar{r_{u'}})}}{\sum_{u' \in N}{|s(u,u')|}}
+\end{equation}
 
 \subsection{Resultate}
 \label{sec:userbasedresults}
 
-In diesem Abschnitt werden die Resultate der Evaluation von Userbased Collaborative Filtering pr"asentiert. Userbased Collaborative Filtering nimmt zwei Parameter.
+Userbased Collaborative Filtering nimmt drei Parameter.
 \begin{itemize}
 \item "Ahnlichkeitsmetrik
+\item Formel f"ur Berechnung unbekannter Bewertungen $p_{i,u}$.
 \item Nachbarschaftsgr"osse $k$
 \end{itemize}
 
-In diesem Projekt wurden zwei A"hnlichkeitsmetriken implementiert.
+Mithilfe der Evaluation k"onnen experimentell diejenigen Parameter gefunden werden, die zum geringsten MAE f"uhren. In diesem Abschnitt werden die Resultate der Experimente pr"asentiert. 
+
+\subsubsection{"Ahnlichkeitsmetrik}
+\label{sec:simresults}
+
+In Abschnitt \ref{sec:neigborhood} wurden drei "Ahnlichkeitsmetriken vorgestellt:
 
 \begin{itemize}
+\item Pearson Korrelation
+\item Optimierte Pearson Korrelation
 \item Euklidische Distanz
-\item Pearson Correlation
 \end{itemize}
 
-F"ur jede "Ahnlichkeitmetrik wurde ein Userbased-Model mit dem Trainingset erstetllt. Diese wurden mit dem Testset evaluiert. Der Vegleich der "Ahnlichkeitmetriken wurde mit einer Nachbarschaftsgr"osse $k$ von 30 erstellt.
+F"ur jede "Ahnlichkeitmetrik wurde ein Userbased-Model mit dem Trainingset erstellt. Diese wurden mit dem Testset evaluiert. Der Vegleich der "Ahnlichkeitmetriken wurde mit einer Nachbarschaftsgr"osse $k$ von 5 erstellt und $p_{i,u}$ wurde mit der Formel \ref{eq:optcomputeprediction} berechnet. Abbildung \ref{fig:comparesim} zeigt die Resultate der Experimente.
 
 \begin{figure}
-  \centering
 \begin{tikzpicture}
   \begin{axis}[
-    xbar, xmin=0.8,
-    height=4.5cm, width=12cm, enlarge y limits=0.5,
-    symbolic y coords = {Euklidische Distanz,Pearson Korrelation},
-    xlabel={MeanAbsoluteError},
+    xbar, xmin=0.7, xmax=0.95,
+    height=6cm,width=10cm, enlarge y limits=0.5,
+    symbolic y coords = {Euklidische Distanz,Pearson Korr.,Opt. Pearson Korr.},
+    xlabel={Mean Absolute Error},
     ytick = data,
     nodes near coords, nodes near coords align={horizontal},
     ]
-    \addplot coordinates {(0.872,Euklidische Distanz) (0.831,Pearson Korrelation)};
+    \addplot coordinates {(0.872,Euklidische Distanz) (0.831,Pearson Korr.) (0.718,Opt. Pearson Korr.)};
   \end{axis}
 \end{tikzpicture}
-\label{fig:similarity}
+\centering
+\label{fig:comparesim}
 \caption{Vergleich der "Ahnlichkeitsmetriken euklidische Distanz und Pearson Korrelation}
 \end{figure}
 
-Der Vergleich der "Ahnlichkeitsmetriken zeigt, dass der Userbased Collaborative Filtering Algorithmus bessere Bewertungen mit dem Pearson Korrelation sch"atzt.
+Der Vergleich der "Ahnlichkeitsmetriken zeigt, dass der Userbased Collaborative Filtering Algorithmus den kleinsten Fehler beim berechnen von unbekannten Bewertungen mit dem optimierten Korrelationskoeffizienten macht.
+
+\subsubsection{Berechnung unbekannter Bewertungen}
+\label{sec:eqpredictresults}
+
+Eine unbekannte Bewertung kann auf mehrere Arten berechnet werden. In Abschnitt \ref{sec:predict} wurden die Formeln \ref{eq:computeprediction} und \ref{eq:optcomputeprediction} zur Berechnung  von $p_{u,i}$ beschrieben. Bei der ersten Variante wird das Produkt von "Ahnlichkeit und Bewertung berechnet. Bei der zweiten Variante nur das Produkt zwischen Abweichung und "Ahnlichkeit. Beide Formeln wurden mit den Testdaten evaluiert. Wie in Abbildung \ref{fig:predicteq} ersichtlich hat diese "Anderung der Berechnung einen starken Einfluss auf den MAE. Die Messungen wurden mit einer Nachbarschaftsgr"osse von 20 und dem Pearson Korrelationskoeffizienten durchgef"uhrt.
+
+\begin{figure}
+\begin{tikzpicture}
+  \begin{axis}[
+    xbar, xmin=0.7, xmax=1.1,
+    height=6cm,width=10cm, enlarge y limits=0.5,
+    symbolic y coords = {Bewertung,Abweichung,},
+    xlabel={Mean Absolute Error},
+    ytick = data,
+    nodes near coords, nodes near coords align={horizontal},
+    ]
+    \addplot coordinates {(1.0514,Bewertung) (0.841,Abweichung)};
+  \end{axis}
+\end{tikzpicture}
+\centering
+\label{fig:predicteq}
+\caption{Vergleich der Berechnungmethoden f"ur $p_{u,i}$}
+\end{figure}
+
+\subsubsection{Gr"osse der Nachbarschaft}
+\label{sec:neighborhoodsize}
 
 Die Gr"osse der Nachbarschaft $k$ hat grossen Einfluss auf die Qualit"at des Recommender. Um den besten Wert f"ur $k$ herauszufinden wurden mehrere Testl"aufe mit unterschiedlichem $k$ ausgef"uhrt.
 
@@ -485,33 +600,32 @@ Die Gr"osse der Nachbarschaft $k$ hat grossen Einfluss auf die Qualit"at des Rec
 \caption{Vergleich der "Ahnlichkeitsmetriken euklidische Distanz und Pearson Korrelation}
 \end{figure}
 
-Abbildung \ref{fig:nrofneighbors} zeigt den Mean Absolute Error in Abh"angigkeit der Nachbarschaftsgr"osse $k$. F"ur das gegebene Testset funktioniert eine Nachbarschaftsgr"osse von 30 am besten.
-
-Im Vergleich zur unpers"onlichen Bewertungsberechnung \ref{eq:bui}, generiert der User-based Collaboritive Filtering Algorithmus Bewertungen, die einen tieferen Mean Absolute Error zur Folge haben.
+Abbildung \ref{fig:nrofneighbors} zeigt den Mean Absolute Error in Abh"angigkeit der Nachbarschaftsgr"osse $k$. F"ur das gegebene Testset funktioniert eine Nachbarschaftsgr"osse von 10 am besten.
 
 \begin{figure}
   \centering
 \begin{tikzpicture}
   \begin{axis}[
-    xbar, xmin=0.8,
+    xbar, xmin=0.6,
     height=4.5cm, width=12cm, enlarge y limits=0.5,
     symbolic y coords = {Userbased,$b_{ui}$},
     xlabel={MeanAbsoluteError},
     ytick = data,
     nodes near coords, nodes near coords align={horizontal},
     ]
-    \addplot coordinates {(0.831,Userbased) (0.861,$b_{ui}$)};
+    \addplot coordinates {(0.66,Userbased CF) (0.861,$b_{ui}$)};
   \end{axis}
 \end{tikzpicture}
 \label{fig:uuvsbui}
 \caption{Vergleich von Userbased CF mit unpers"onlichen Empfehlungen}
 \end{figure}
 
-F"ur den Vergleich von Abbildung \ref{fig:uuvsbui} wurde der Userbased Algorithmus mit einer Nachbarschaftsgr"osse von 30 und mit der Pearson Korrelation Metrik ausgef"uhrt. 
+F"ur den Vergleich von Abbildung \ref{fig:uuvsbui} wurde der Userbased Algorithmus mit einer Nachbarschaftsgr"osse von 30 und mit der optimierter Pearson Korrelation Metrik ausgef"uhrt. 
 
-Wie man Abbildung \ref{fig:uuvsbui} entnehmen kann bringt Userbased Collaborative Filtering einen qualitativen Vorteil. Der Algorithmus ist intuitiv und relative einfach zu implementieren. Da er nur zwei Paramter hat ("Ahnlichkeitsmetrik, Nachbarschaftsgr"osse) kann man den Algorithmus einfach einsetzen. Wenn man gute Map Implementationen zur Verf"ugung hat, kann eine Bewertung in vern"unftiger Zeit abgesch"atzt werden.
+Wie man Abbildung \ref{fig:uuvsbui} entnehmen, kann bringt Userbased Collaborative Filtering einen qualitativen Vorteil im Vergleich zur unpers"onlichen Bewertungsberechnung \ref{eq:bui}. Der Algorithmus ist intuitiv und relative einfach zu implementieren. Da er nur zwei Paramter hat ("Ahnlichkeitsmetrik, Nachbarschaftsgr"osse) kann man den Algorithmus einfach einsetzen. Wenn man gute Map Implementationen zur Verf"ugung hat, kann eine Bewertung in vern"unftiger Zeit abgesch"atzt werden.
+Die Optimierung der "Ahnlichkeitmetrik hat die Qualit"at des Recommender stark verbessert. Die Ber"ucksichtigung der User Tendenzen hat den Fehler ebenfalls reduziert.
 
-\section{Matrix Faktorisierung}
+\section{Matrixfaktorisierung}
 \label{sec:matrixfactorization}
 
 Collaborative Filtering kann man weiter noch in neighborhood methods und latent factor model aufteilen. Bei Neighborhood Methoden geht es darum "ahnliche User oder Items zu finden. Latent Factor Models versuchen die Items und die User zu charakterisieren. 
@@ -866,8 +980,8 @@ F"ur dieses Projekt wurden in ein ausf"uhrbares Programm und mehrere Module aufg
 \item[Matrixfactorization] Das Modul enth"alt einen Recommender der Matrixfaktorisierung nutzt.
 \item[FunkSVD] Der Optimierungalgorithmus von Simon Funk ist in diesem Modul implementiert.
 \end{description}
-.
-atrixfactorization enth"alt einen Recommender mit Matrixfaktorisierung. Der Optimierungsalgorithmus Funk's stochatischer Gradientenabstiegt wurde in ein separates 
+
+Matrixfactorization enth"alt einen Recommender mit Matrixfaktorisierung. Der Optimierungsalgorithmus Funk's stochatischer Gradientenabstiegt wurde in ein separates 
 
 \subsection{Build System}
 \label{sec:cabal}
