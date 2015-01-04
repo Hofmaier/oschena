@@ -3,6 +3,7 @@ module Userbased
 uupredict2,
 Model,
 model,
+model2,
 p1,
 n3,
 tests6,
@@ -27,7 +28,7 @@ type UIDict = Map.MultiMap User Item
 type Similarity = Double
 type UUSDict = M.Map User (M.Map User Similarity)
 type IUDict = Map.MultiMap Item User
-type Model = (UIDict, UIRDict, IUDict, UUSDict)
+type Model = (UIDict, UIRDict, IUDict, UUSDict, Map.MultiMap User Double )
 
 firstline::String
 firstline = "1\t1\t5\t874965758"
@@ -75,7 +76,7 @@ uupredict2 u i v = n7 u i (model v)
 
 p1 :: User
    -> Item
-   -> (UIDict, UIRDict, IUDict, UUSDict)
+   -> (UIDict, UIRDict, IUDict, UUSDict, Map.MultiMap User Double)
    -> Double
 p1 u i m = n7 u i m
 
@@ -165,9 +166,33 @@ n3 u i (_, uirm, ium, uusm) = n4 userratedi similarities uirm i
 m1 :: [User]
    -> UIDict
    -> UIRDict
-   -> M.Map User (M.Map User Similarity)
+     -> M.Map User (M.Map User Similarity)
 m1 ux uim uirm = foldl (\acc u -> M.insert u (m2 u uim uirm) acc) M.empty ux
 
+m4 :: [User]
+   -> UIDict
+   -> UIRDict
+   -> Map.MultiMap User Double
+   -> M.Map User (M.Map User Similarity)
+m4 ux uim uirm urm = foldl (\acc u -> M.insert u (neighborm u) acc) M.empty ux
+                     where insertum u m = M.insert u (neighborm u) m
+                           neighborm u = foldl (\acc o -> M.insert o (sim2 u o) acc) M.empty ux
+                           sim2 u o = pearson2 (rsi u (si u o)) (rsi o (si u o)) (ru u) (ru o)
+                           si u ou = shareditems u ou uim
+                           rsi u s = ratingsi s (uid u)
+                           uid u = M.findWithDefault M.empty u uirm
+                           ru u = MS.mean $ Map.lookup u urm
+                           
+
+ratingsi :: [Item] -> M.Map Item Double -> [Double]
+ratingsi xs m = foldl (\acc x -> (M.findWithDefault 0 x m) :acc) [] xs
+
+pearson2 r1 r2 mr1 mr2 = n / d
+                         where n = sum (zipWith (\x y -> x*y) (dev r1 mr1) (dev r2 mr2))
+                               dev xs m = map (\x -> x - m ) xs
+                               d = (dev2 r1 mr1) * (dev2 r2 mr2)
+                               dev2 xs m = sqrt (sum (map (\x -> (x-m)^2) xs))
+                             
 -- neigborhood for user u
 m2 :: User 
    -> UIDict 
@@ -178,23 +203,38 @@ m2 u uimap uirmap = foldl (\acc x -> M.insert x (s6 u uimap uirmap x) acc) M.emp
 
 n7 :: User
    -> Item
-   -> (UIDict, UIRDict, IUDict, UUSDict)
+   -> (UIDict, UIRDict, IUDict, UUSDict, Map.MultiMap User Double)
    -> Double
-n7 u i m = sum [s * r | (s, r, u) <- neighborhood] / sum [ s | (s, _, _) <- neighborhood]
-  where neighborhood = n8 u i m
-
-
+n7 u i m = (ru u) + (sum [(s * (r - (ru u))) | (s, r, u) <- neighborhood] / sum [ s | (s, _, _) <- neighborhood])
+  where neighborhood = n8 u i (uim,uirm,ium,uusm)
+        (uim,uirm,ium,uusm,urm) = m
+        ru u = MS.mean $ Map.lookup u urm
+        dev u = stddev $ Map.lookup u urm
+        
 n8 u i m = take 20 (reverse (sort neighborhood))
   where neighborhood = n3 u i m
-
                          
-model :: RVec -> (UIDict, UIRDict, IUDict, UUSDict)
-model v = (uim, uirmap, ium, uusm)
+model :: RVec -> (UIDict, UIRDict, IUDict, UUSDict, Map.MultiMap User Double)
+model v = (uim, uirmap, ium, uusm, urm)
   where uirmap = uirdict v
         ium = iudict v
-        uusm = m1 users uim uirmap 
+        uusm = m4 users uim uirmap urm
         uim = uidict v
         users = Map.keys uim
+        urm = V.foldl (\acc (u,_,r) -> Map.insert u r acc) Map.empty v
+
+model2 :: RVec -> (Double, Map.MultiMap User Double, Map.MultiMap Item User, M.Map User (M.Map Item Double))
+model2 v =  (mu, urm, ium, uirmap)
+  where mu = (V.sum $ V.map (\(u,i,r)->r) v) / (fromIntegral $ V.length v)
+        urm = V.foldl (\acc (u,_,r) -> Map.insert u r acc) Map.empty v
+        ium = iudict v
+        uirmap = uirdict v
+
+loadurdict :: [UserItemRating] -> URdict
+loadurdict uirs = foldl insertr Map.empty uirs
+
+insertr :: URdict -> UserItemRating -> URdict
+insertr acc (u:i:r:_) = Map.insert u r acc
 
 n1 :: User -> RVec -> [Double]
 n1 u v =  map (s6 u uimap uirmap) users
@@ -214,20 +254,27 @@ tests6 u1 u2 v = r2
                      uim = uidict v
                      uirm = uirdict v
 
+
+--similarity between users
 s6 :: User -> UIDict -> UIRDict -> User -> Double
 s6 u m uirm ou = s7 ratingsuser ratingsotheruser
                where ratingsuser = s1 u si uirm
                      ratingsotheruser = s1 ou si uirm
                      si = shareditems u ou m
 
+
 s7 :: [Double] -> [Double] -> Double
 s7 r1 r2
-  | (length r1) < 2 = 0
-  | (length r2) < 2 = 0
+  | (length r1) < 2 = a1 r1 r2
+  | (length r2) < 2 = a1 r1 r2
   | stddev r1 == 0.0 = 0
   | stddev r2 == 0.0 = 0
   |  otherwise = MS.pearson r1 r2
-  
+
+a1 [r1] [r2] = ((abs (r1 - r2)) * (-2/5) + 1)
+a1 _ _ = 0
+
+
 s1 :: User -> [Item] -> UIRDict -> [Double]
 s1 u xs m = foldl (s3 u m) [] xs
 
