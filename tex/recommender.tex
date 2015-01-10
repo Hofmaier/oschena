@@ -22,7 +22,7 @@ stringstyle=ttfamiliy
 \tableofcontents
 \newpage
 \begin{abstract}
- Recommender Systeme nutzen Datenbanken mit Userpreferenzen, um dem User aus einer grossen Menge von Objekten, diejenigen zu empfehlen, die er noch nicht gesehen hat und die ihn interessieren k"onnten. Dieser Report konzentriert sich auf Collaborativ Filtering. Collaborative Filtering ist eine Klasse von Recommender, die Empfehlungen aufgrund von Preferenzen anderer User berechnet.
+ Recommender Systeme nutzen Datenbanken mit Userpreferenzen, um dem User aus einer grossen Menge von Objekten, diejenigen zu empfehlen, die er noch nicht gesehen hat und die ihn interessieren k"onnten. Dieser Report konzentriert sich auf Collaborativ Filtering. Collaborative Filtering ist eine Klasse von Recommender, die Empfehlungen aufgrund von Verhaltensmuster anderer User berechnen.
 In diesem Report werden zwei Collaborative Filtering Methoden beschrieben. Userbased Collaborative Filtering ist eine der ersten und intuitivsten Methoden. Matrixfaktorisierung ist eine weitere Methode, die an der Netflix Competition die besten Resultate lieferte.
 
 Die Algorithmen werden mit einer geeigneten Evaluation verglichen. Die Evaluation und die Algorithmen wurden in Haskell implementiert.
@@ -42,8 +42,8 @@ Recommendersysteme werden vorallem im e-Commerce eingesetzt. Man kann sie aber a
 In nachfolgenden Text wird haupts"achlich von User und Items gesprochen. Sie sind folgendermassen definiert.
 
 \begin{description}
-\item[User] User sind die Konsumenten oder f"ur die eine Empfehlung erstellt werden soll. 
-User haben Preferencen und bewerten Items aufgrund des pers"onlichen Geschmacks. In einer Information Retrieval Anwendung k"onnen User auch einfach die Benutzer der Software sein.
+\item[User] User sind die Konsumenten f"ur die eine Empfehlung erstellt werden soll. 
+User haben Preferenzen und bewerten Items aufgrund des pers"onlichen Geschmacks. In einer Information Retrieval Anwendung k"onnen User auch einfach die Benutzer der Software sein.
 \item[Item] 
 Items k"onnen Artikel, Filme, B"ucher, Dokumente e.t.c sein. Items werden den Usern empfohlen.
 \end{description}
@@ -52,19 +52,19 @@ Der aktive User bezeichnet den User, f"ur den Empfehlungen erstellt werden soll 
 
 Es gibt zwei unterschiedliche Strategien f"ur Recommendersysteme: Content filtering und Collaborative Filtering. Dieser Report besch"aftigt sich nur mit Collaborative Filtering Methoden. 
 
-\subsection{Contentbased Filtering}
+\subsection{Content-based Filtering}
 \label{sec:contentbased}
 
-Bei Contentbased Filtering wird zu jedem Artikel und zu jedem User ein Profil erstellt. Dieses Profil enth"alt Informationen "uber die Eigenschaften von User und Item. Beispielsweise k"onnte man alle angebotenen Filme nach ihrer Genrezugeh"origkeit bewerten. Ein Film hat beispielsweise einen Action und einen Romantikanteil. User k"onnen angeben, ob sie lieber Action oder Romantik m"ogen. Content based Filtering sucht dann Filme, die am besten mit dem Userprofile matchen. Die Schwierigkeit an Content based Filtering ist das Erfassen von Daten zu jedem Item und zu jedem User. Jemand muss jeden Artikel im Angebot nach seinem Content bewerten. Von jedem User muss ein Profil erstellt werden. Der User kann seine Preferenzen oft selber eingeben. Denn meisten User ist das zu m"uhsam.
+Bei Content-based Filtering wird zu jedem Artikel und zu jedem User ein Profil erstellt. Dieses Profil enth"alt Informationen "uber die Eigenschaften von User und Item. Beispielsweise k"onnte man alle angebotenen Filme nach ihrer Genrezugeh"origkeit bewerten. Ein Film hat beispielsweise einen Action und einen Romantikanteil. User k"onnen angeben, ob sie lieber Action oder Romantik m"ogen. Content-based Filtering sucht dann Filme, die am besten mit dem Userprofil passen. Die Schwierigkeit an Content-based Filtering ist das Erfassen von Daten zu jedem Item und zu jedem User. Jemand muss jeden Artikel im Angebot nach seinem Content bewerten. Von jedem User muss ein Profil erstellt werden. Der User kann seine Preferenzen oft selber eingeben. Denn meisten User ist das zu m"uhsam.
 
 \subsection{Collaborative Filtering}
 \label{sec:collaborativefiltering}
 
 Collaborative Filtering ist eine weitere M"oglichkeit das Re\-commender-Prob\-lem zu l"osen. Bei Collaborative Filtering wird das Verhalten von User in der Vergangenheit analisiert. Dabei werden Bewertungen oder Transaktionen angeschaut. Der Inhalt der Artikel ist egal. Da diese Strategie unab"angig vom Inhalt ist kann sie f"ur jedes beliebige Recommendersystem eingesetzt werden. Es kann also im e-Commerce sowie auch im Information Retrieval eingesetzt werden.  Es wird in vielen Webshops erfolgreich eingesetzt \cite{sarwar01}. 
 
-Ziel des Collaborative Filtering ist, es einem User neue Items oder f"ur ein bestimmtes Item und einen bestimmten User eine Bewertung vorauszusagen. Typischweise gibt es eine Menge von $m$ Usern  $\mathnormal{U}$ und eine Menge von $ \mathnormal{I} $ Items. Jeder User $\mathnormal{u}$ hat eine Liste $\mathnormal{I_u}$ von Items, welche er bewertet hat. Diese Bewertung wird meisten als numerischer Wert in einem Intervall ausgedr"uckt. Bei Filmen hat es sich zum beispiel durchgesetzt das man eine Zahl zwischen 1 und 5 angibt, wobei die 5 aussagt, dass der Film dem User gefallen hat und eine 1 bedeutet, dass dem User der Film nicht gefallen hat.. Diese Bewertungen werden von den User explizit eingegeben oder sie werden zum beispiel vom Kaufverhalten abgeleitet.
+Ziel des Collaborative Filtering ist, es einem User neue Items oder f"ur ein bestimmtes Item und einen bestimmten User eine Bewertung vorauszusagen. Typischweise gibt es eine Menge von $m$ Usern  $\mathnormal{U}$ und eine Menge von $ \mathnormal{I} $ Items. Jeder User $\mathnormal{u}$ hat eine Liste $\mathnormal{I_u}$ von Items, welche er bewertet hat. Diese Bewertung wird meisten, als numerischer Wert in einem Intervall ausgedr"uckt. Bei Filmen hat es sich zum Beispiel durchgesetzt, dass man eine Zahl zwischen 1 und 5 angibt, wobei die 5 aussagt, dass der Film dem User gefallen hat und eine 1 bedeutet, dass dem User der Film nicht gefallen hat. Diese Bewertungen werden von den User explizit eingegeben oder sie werden vom Kaufverhalten abgeleitet.
 
-\subsubsection{Abgrenzung zu Contentbased Filtering}
+\subsubsection{Abgrenzung zu Content-based Filtering}
 \label{sec:definitioncf}
 
 Bei Collaborative Filtering geht man davon aus, dass man die Bewertungen anderer User dazu benutzen kann, um dem aktiven User ein Item zu empfehlen, dass er noch nicht gesehen hat. Im Unterschied zu Contentbased Filtering ist der Inhalt des Items f"ur die Empfehlung nicht relevant. Das einzige was z"ahlt sind die Bewertungen anderer User.
@@ -74,20 +74,27 @@ Bei Collaborative Filtering geht man davon aus, dass man die Bewertungen anderer
 
 Gegen"uber Contentbased Filtering bietet Collaborative Filtering folgenden Vor- und Nachteile.
 \begin{description}
+\item[Vorteile]
+\begin{description}
 \item[Kein Wissen "uber Inhalt n"otig] Es muss nicht jedes Item nach seinem Content dursucht werden. Meisten ist der Inhalt im Kontext der Empfehlung nicht brauchbar (L"ange, Kategorie, Jahr).
 \item[Usergeschmack "andert] Collaborativ Filtering passt sich automatisch an.
-\item[Intuitiv] Jeder versteht "Kunden die diesen Artikel gekauft haben, haben auch diese Artikel gekauft.
+\item[Intuitiv] Jeder versteht "Kunden die diesen Artikel gekauft haben, haben auch diese Artikel gekauft".
+\end{description}
+\item[Nachteile]
+\begin{description}
+\item[Skalierbarkeit und Sparsity] Die User-Item Matrix ist normalerweise sehr gross (ca. $10^{7}$ User, ca. $~10^6$ Items) und sehr d"unn besetzt. Das f"uhrt zu Performanceproblemen, sobald man mit der Matrix rechnen m"ochte.
+\item[Shilling Attack] Wenn die User Items explizit bewerten k"onnen, besteht die Gefahr sogenannter Shilling Attacks. User haben die M"oglichkeit Items, unabh"angig ihrer pers"onlichen Pr"aferenz, gut oder schlecht zu bewerten. Dadurch werden diese Item "ofters oder seltener anderen Usern empfohlen.
+\end{description}
 \end{description}
 
 \subsubsection{Resultate von Collaborative Filtering}
 \label{sec:output}
 
-Man kann zwei Resultate von Collaborative Filtering unterscheiden (siehe Abbildung \ref{fig:cfprocess}.
+Die Collaborative Filtering Algorithmen in diesem Report nehmen bestehende Bewertungen und ein User-Item Tupel $(u,i)$ als Argument und liefern eine Vorhersage $p_{u,i}$ f"ur eine Bewertung.  $p_{u,i}$ dr"uckt die Wahrscheinlichkeit, dass Item $i$ f"ur User $u$ interessant ist, aus. 
 
-\begin{description}
-\item[Prediction] Das System berechnet eine wahrscheinliche Vorhersage $P_{u,i}$ f"ur eine Bewertung von Item i und User u
-\item[Empfehlung] Das System gibt eine Liste von $N$ Items zur"uck, die Items in der Liste hat der user noch nicht bewertet und das System hat die h"ochsten Bewertungen f"ur den aktiven User berechnet.
-\end{description}
+Meistens m"ochte erwartet man von dem Recommendersystem f"ur einen aktiven User $u$ eine Liste Items die ihn interessieren k"onnten und die er noch nicht gesehen hat. In diesem Fall liefert der Recommender eine Liste mit $N$ Elementen. Diese Liste ent"halt Items und ihre zugeh"origen $p_{u,i}$ Werte. Sie ist absteigend nach den $p_{u,i}$-Werten sortiert. 
+
+Diese Liste nennt man Top-N Empfehlung. Abbildung \ref{fig:cfprocess} zeigt die beiden Resultate eines Recommender Algorithmus.
 
 \begin{figure}
   \centering
@@ -103,9 +110,9 @@ Collaborative Filtering kann weiter in zwei unterschiedliche Methoden aufgeteilt
 
 \begin{description}
 \item[Neighboorhood Methoden] Bei Neighboorhood Methoden werden f"ur jeden User "ahnliche User gesucht. Es wird eine Nachbarschaft mit "ahnlichen User erstellt.
-"Ahnlichkeit wird aufgrund von gemeinsam bewerteten Item berechnet. Wenn zwei User f"ur mehrere Items die selben Bewertungen vergeben, sind sie sich "ahnlich. Sie haben einen "ahnlichke Einem User werden diejenigen Items empfohlen, die er noch nicht kennt und die eine hohe Bewertung von "ahnlichen Usern erhalten haben.
+"Ahnlichkeit wird aufgrund von gemeinsam bewerteten Item berechnet. Wenn zwei User f"ur mehrere Items die selben Bewertungen vergeben, sind sie sich "ahnlich. Sie haben einen "ahnlichen Geschmack. Einem User werden diejenigen Items empfohlen, die er noch nicht kennt und die eine hohe Bewertung von "ahnlichen Usern erhalten haben.
 M"ochte man das Rating von einem User f"ur ein bestimmtes Item ab\-sch"atz\-en, schaut man, ob User in der Nachbarschaft das Item bereits bewertet haben. Aufgrund der "Ahnlickeit und den vorhandenen Ratings berechnet man das Rating das der User f"ur dieses Item abgeben w"urde.
-\item[Latent Factor Model] Latent Factor Modelle repr"asentieren User und Items als Vektoren. Die Elemente sind Prefenzen und Eigenschaften. Diese Vektoren werden aufgrund der vorhandenen Bewertungen berechnet.
+\item[Latent Factor Model] Latent Factor Modelle repr"asentieren User und Items als Vektoren. Die Elemente sind Pr"aferenzen und Eigenschaften. Diese Vektoren werden aufgrund der vorhandenen Bewertungen berechnet.
 \end{description}
 
 Dieser Report beschreibt Algorithmen f"ur beide Modele. Userbased ist eine Neighborhood Methode. Matrixfaxtorisation nutzt ein Latent Factor Model.
@@ -125,9 +132,7 @@ Collaborative Filtering muss f"ur Millionen User und Items m"oglich sein. Die Te
 \section{Evaluation}
 \label{sec:evaluation}
 
-In diesem Report werden mehrere L"osungen f"ur das Recommenderproblem beschrieben. Um die Qualit"at der Methoden zu messen werden die unterschiedlichen L"osungen miteinander verglichen. Die Qualit"at wird durch die Genauigkeit der Bewertungsvorhersagen beschrieben. Man misst die Differenz zwischen vorhergesagter und tats"achlicher Bewertung.
-
-Dieser Abschnitt beschreibt eine Methode um die Qualit"at der Algorithmen zu evaluieren. In den nachfolgenden Abschnitten werden die Algorithmen mit dieser Methode evaluiert und miteinader verglichen.
+In diesem Report werden mehrere Algorithmen zur L"osung des Recommenderproblem beschrieben. Die Qualit"at der beschriebenen Algorithmus wird gemessen und mit den anderen Algorithmen verglichen. Dieser Abschnitt beschreibt eine Methode um die Qualit"at der Algorithmen zu evaluieren. In den nachfolgenden Abschnitten werden die Algorithmen mit dieser Methode evaluiert und miteinader verglichen.
 
 \subsection{Daten}
 \label{sec:data}
@@ -170,49 +175,50 @@ F"ur die Matrixfaktorisierung wurden die Daten in als Matrix abgespeichert. So m
 \subsection{Vorgehen}
 \label{sec:procedure}
 
-Zur Evaluierung der Algorithmnen wurde die sogenannte Kreuzvalidierung angewendet. Die Evaluierung wird in zwei Phasen aufgeteilt. In Abbildung \ref{fig:crossvalidation} stellt diese grafisch dar.
+Die Qualit"at des Recommenderalgorithmus wird durch die Genauigkeit der Bewertungsvorhersagen bestimmt. Man misst die Differenz zwischen vorhergesagter und tats"achlicher Bewertung. 
+Um Bewertungen zu approximieren muss man zuerst ein Model erstellen (Training). Danach werden mit diesem Model Vorhersagen berechnet (Test). Die Evaluierung wird in zwei Phasen aufgeteilt. 
+
 \begin{enumerate}
 \item Trainingsphase
 \item Testphase
 \end{enumerate}
 
-Um Evaluationsmetriken zu bestimmen, werden die gegeben Daten ebenfalls in ein Trainings und ein Testset aufgeteilt. In diesem Projekt wurde das Set in 80000 Bewertungen f"ur die Trainingsphase und 20000 Bewertungen f"ur die Evaluierung aufgeteilt.
+In der Trainingsphase wird ein Model aufgrund einer Menge vorhandender Bewertungen berechnet. Diese Menge nennt man das Trainingsset. Die Funktion \verb|train| nimmt als Argument das Trainingsset und gibt als Wert ein Model zur"uck. Dieses Model wird in der Trainingsphase der \verb|predict|-Funktion als Argument "ubergeben. 
 
-In der Trainingsphase berechnet das Recommendersystem das Model. Im Falle des Userbased Collaborative Filtering werden f"ur alle User die "Ahnlichkeiten zu anderen User berechnet. Bei der Matrixfaktorisierung werden in der Trainingsphase die Featurevektoren berechnet. 
+Bei Userbased Collaborative Filtering ist das Model die Nachbarschaft jedes User. Bei Matrixfaktorisierung sind die Latent Faktor Vektoren das Model.
 
-In diesem Projekt wurde das Set in 80000 Bewertungen f"ur die Trainingsphase und 20000 Bewertungen f"ur die Evaluierung aufgeteilt.
+Die \verb|predict|-Funktion nimmt das Model, einen User $u$ und ein Item $i$ als Argumente und gibt als Wert die approximierte Bewertung $p$ zur"uck.
 
-\begin{figure}
-  \centering
-      \includegraphics[width=0.5\textwidth]{evaluation}
-  \caption{Kreuzvalidierung}
-  \label{fig:crossvalidation}
-\end{figure}
+Um die Genauigkeit zu bestimmen, werden alle User-Item Paare aus einer Menge vorhandener Bewertungen mit der Funktion \verb|predict| auf die approximierte Bewertung $p$ abgebildet. Die Menge der vorhandenen Bewertungen nennt man Testset. Sie unterscheidet sich vom Trainingset.
 
-Das Model der Trainingsphase wird in der Testphase verwendet. Mit dem berechneten Model muss der Recommender zu jeder Bewertung des Testset eine Bewertung vorhersagen ohne die tats"achliche Bewertung zu kenne. Diese Vorhersage vergleicht man mit dem tats"achlichen Bewertung aus dem Testset. Die Abweichungen vom tats"achlichen Wert nennt man Residuen. 
-
-\subsection{Evaluationsmetrik}
+\subsubsection{Evaluationsmetrik}
 \label{sec:evaluationmetrik}
 
-Die Qualit"at des Recommendersystem kann mit Evaluationsmetriken "uberpr"uft werden. Evaluationsmetriken geben Auskunft dar"uber wie gut das Recommendersystem ist. Idealerweise kann ein Recommendersystem die Bewertung f"ur einen User und ein Item vorhersagen. Statistische Genauigkeitsmetriken geben an wie weit entfernt die Vorhersage vom tats"achlichen Wert ist. 
+Es gibt verschieden Evaluationsmetriken. In diesem Projekt wurde der Mean Absolute Error als Metrik verwendet. Der Mean Absolute Error berechnet sich wie folgt:
 
-Es gibt verschieden Evaluationsmetriken. In diesem Projekt wurde der Mean Absolute Error als Metrik verwendet. MAE vergleicht die tats"achliche Bewertung eines User f"ur ein Item mit der Bewertung, die der Recommender berechnet hat. Man bildet die Differenz von Vorhersage und tats"achlicher Bewertung. Von der Differenz wird der Betrag berechnet. Schliesslich bestimmt man die mittlere Abweichung, indem man durch Anzahl Bewertungen $N$ im Testset teilt 
-
-Der MAE ist wie folgt definiert \cite{sarwar01}:
+Von allen approximierten Werten $p$ wird die Differenz zur tats"achlichen Bewertung $q$ berechnet. Die Abweichungen vom tats"achlichen Wert nennt man Residuen. Von der Differenz wird der Betrag berechnet. Die Abweichungen werden summmiert. Schliesslich bestimmt man die mittlere Abweichung, indem man durch Anzahl Bewertungen $N$ im Testset teilt 
+ Diese Metrik nennt man den Mean Absolute Error ($MAE$). Sie wird f"ur die Evaluation von Recommendersystemen h"aufig verwendet \cite{sarwar01}. 
 
 \begin{equation}
   \label{eq:mae}
   MAE = \frac{\sum_{i+1}^N | p_i-q_i | }{N}
 \end{equation}
 
-Je tiefer der MAE, desto besser ist die Genauigkeit des Recommender.
+In diesem Projekt wurde das Set in 80000 Bewertungen f"ur die Trainingsphase und 20000 Bewertungen f"ur die Evaluierung aufgeteilt.
 
-Root Mean Squared Error und Correlation sind zwei weitere Metriken.
+Abbildung \ref{fig:crossvalidation} stellt das Vorgehen der Evaluation grafisch dar.
 
-\subsection{Hardware Plattfrom}
+\begin{figure}
+  \centering
+      \includegraphics[width=0.5\textwidth]{evaluation}
+  \caption{Evaluation}
+  \label{fig:crossvalidation}
+\end{figure}
+
+\subsection{Hardware Plattform}
 \label{platform}
 
-Die Experimente wurden auf einem PC-Notebook durchgef"uhrt. Der Notebook hat 8GB Ram und die CPU ist mit 2.9Ghz getaktet.
+Die Experimente wurden auf einem PC-Notebook durchgef"uhrt. Das Notebook hat 8GB Ram und die CPU ist mit 2.9Ghz getaktet.
 
 \begin{center}
 \begin{tabular}{ll}
