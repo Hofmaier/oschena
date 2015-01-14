@@ -312,3 +312,14 @@ getsm :: User
 getsm u m = case M.lookup u m of
   Just x -> x
   Nothing -> error "cannot find first key user in similarity map"
+
+bu :: Double
+   -> MM.MultiMap Int Double
+   -> User
+   -> Double
+bu mu urm u = bu
+  where ratingsofUser = MM.lookup u urm
+        dev = map (\x -> x - mu) $ ratingsofUser
+        s = sum dev 
+        n = fromIntegral $ length ratingsofUser
+        bu = s / n

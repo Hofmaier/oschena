@@ -60,3 +60,5 @@ il2fl::[Int] -> [Float]
 il2fl il = [fromIntegral x | x <- il]
 
 
+edist :: [Int] -> [Int] -> Float
+edist r1 r2 = sqrt (sum [(fromIntegral a-fromIntegral b)^2|(a,b) <- zip r1 r2])
