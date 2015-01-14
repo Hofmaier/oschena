@@ -228,3 +228,10 @@ Ergebnisse: Recommender Implementation
 - Ecosystem Haskell
 - Projekt realisieren
 - Schreibkompetenz
+* sitzung 6.1.
+es gibt nur vorteile
+prediction empfehlung unterscheidung unklar 
+kreuzvalidierung
+N ist unklar
+dimensions reduktion. erwaehen dass es ein besipiel ist.
+fazit und ausblick: mehr schreiben. einordnung der resultate. vergleich mit anderen.

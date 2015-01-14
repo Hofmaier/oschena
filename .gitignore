@@ -11,3 +11,4 @@ u.data
 *.bbl
 *.blg
 *.toc
+*_region_.tex*
