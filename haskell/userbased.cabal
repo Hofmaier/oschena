@@ -3,7 +3,7 @@
 
 name:                userbased
 version:             0.1.0.0
-synopsis:            collaborative filtering with user based knn
+synopsis:            collaborative filtering with user based knn and matrixfactorisation
 -- description:         
 homepage:            http://www.github.com/Hofmaier/oschena.git
 license:             MIT
