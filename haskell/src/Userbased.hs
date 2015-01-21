@@ -78,11 +78,12 @@ pearson2 r1 r2 mr1 mr2 = n / d
         d = (dev2 r1 mr1) * (dev2 r2 mr2)
         dev2 xs m = sqrt (sum (map (\x -> (x-m)^2) xs))
                              
-
-predict :: (UIDict, UIRDict, IUDict, UUSDict, MM.MultiMap User Double)
-        -> Int
-        -> Int
-        -> Double
+-- | comutes a prediction for rating of user u on item i based on
+-- the neighorhood of u
+predict :: Model -- ^ knn model
+        -> Int -- ^ User
+        -> Int -- ^ Item
+        -> Double -- ^ rating prediction
 predict m u i = (ru u) + (sum [(s * (r - (ru u))) | (s, r, u) <- neighborhood] / sum [ s | (s, _, _) <- neighborhood])
   where neighborhood = nearest u i (uim,uirm,ium,uusm)
         (uim,uirm,ium,uusm,urm) = m
@@ -121,7 +122,7 @@ model v = (uim, uirmap, ium, uusm, urm)
         users = MM.keys uim
         urm = V.foldl (\acc (u,_,r) -> MM.insert u r acc) MM.empty v
 
-
+-- | computes user rating bias 
 bu :: Double
    -> MM.MultiMap Int Double
    -> User
@@ -133,10 +134,16 @@ bu mu urm u = bu
         n = fromIntegral $ length ratingsofUser
         bu = s / n
 
-sim_distance :: Int -> Int -> [[Int]] -> UIdict -> Matrix Int -> Float
+-- | comutes similarity between user
+sim_distance :: User 
+             -> User
+             -> [[Int]]
+             -> UIdict
+             -> Matrix Int
+             -> Float
 sim_distance u1 u2 r d  m = edist itemsu1 itemsu2 
-                       where itemsu1 = ratingsOfUser u1 m (shareditems u1 u2 d)
-                             itemsu2 = ratingsOfUser u2 m (shareditems u1 u2 d)
+  where itemsu1 = ratingsOfUser u1 m (shareditems u1 u2 d)
+        itemsu2 = ratingsOfUser u2 m (shareditems u1 u2 d)
 
 ratingsOfUser :: Int -> Matrix Int -> [Int] -> [Int]
 ratingsOfUser user ratings items = foldl (\acc i -> (getElem i user ratings):acc) [] items
@@ -150,12 +157,15 @@ rating user item ts = fromIntegral (head ( [r | u:i:r:_ <- ts, i == item && u ==
 neighborhood :: Int -> Ratings -> UIdict -> Matrix Int -> [(Float, Int)]
 neighborhood user ts d m =  [(sim_distance user u ts d m, u) | u <- users ts]
 
+-- | get all users. no duplicates
 users :: Ratings -> [Int]
 users ts = nub [u | u:xs <- ts]
 
+-- | euclidian distance between two user. takes shared ratings as paramaters
 edist :: [Int] -> [Int] -> Float
 edist r1 r2 = sqrt (sum [(fromIntegral a-fromIntegral b)^2|(a,b) <- zip r1 r2])
 
+-- | euclidian distance between two user. takes shared ratings as paramaters
 edist2 ::  [Double] -> [Double] -> Double
 edist2 r1 r2 = 1 - (sqrt (sum [( a - b )^2 | (a,b) <- zip r1 r2]))
 

@@ -7,6 +7,7 @@ import qualified Data.Vector as V
 type Item = Int
 type User = Int
 
+-- | creates dictionaries for unpersonalized recommendation.
 model :: V.Vector (Int, Int, Double)
        -> (Double, MM.MultiMap User Double, MM.MultiMap Item User, M.Map User (M.Map Item Double))
 model v =  (mu, urm, ium, uirmap)

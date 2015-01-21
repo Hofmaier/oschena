@@ -8,6 +8,7 @@ import qualified Data.Vector as V
 import qualified Data.ByteString.Lazy as Bl
 import qualified Data.MultiMap as MM
 import qualified Data.Map as M
+import qualified Matrixfactorization as Mf
 
 type Rating = (Int, Int, Double)
 type User = Int
@@ -20,18 +21,22 @@ main = do
 dispatch :: String -> [String] -> IO ()
 dispatch "userbased" = userbased
 dispatch "bias" = bias 
+dispatch "mf" = matrixfactorization
 dispathc _ = bias
+
+matrixfactorization :: [String] -> IO ()
+matrixfactorization xs =  do
+  putStrLn "Start userbased recommender"
+  (traindata, testdata) <- loadData
+  m <- Mf.model traindata
+  putStrLn $ "Mean Absolute Error: " ++ (show $ mae (Mf.predict m) testdata)  
+
 
 userbased :: [String] -> IO ()
 userbased _ = do
   putStrLn "Start userbased recommender"
   putStrLn "Loading Data"
-  c1 <- Bl.readFile basefile
-  c2 <- Bl.readFile testfile
-  let baseData = decode NoHeader c1 :: Either String (V.Vector Rating)
-  let testData = decode NoHeader c2 :: Either String (V.Vector Rating)
-  let modelv =  toVec baseData
-  let testv = toVec testData
+  (modelv, testv) <- loadData
   let m = Ub.model modelv 
   putStrLn $ "Mean Absolute Error: " ++ (show $ mae (Ub.predict m) testv)  
 
@@ -51,14 +56,19 @@ errors p v = V.filter (\x -> not $ isNaN x) $ V.map (\(u, i, r) -> abs (r - p u 
 bias _ = do
   putStrLn "Start bias recommender"
   putStrLn "Loading Data"
+  (modelv, testv) <- loadData
+  let (mu,urm,ium,uirm) = Bi.model modelv 
+  putStrLn $ "Mean Absolute Error: " ++ (show $ mae (Bi.predict mu urm ium uirm) testv)  
+
+basefile = "/home/lukas/oschena/ml-100k/base.csv"
+testfile = "/home/lukas/oschena/ml-100k/test.csv"
+
+loadData :: IO (V.Vector Rating, V.Vector Rating) 
+loadData = do
   c1 <- Bl.readFile basefile
   c2 <- Bl.readFile testfile
   let baseData = decode NoHeader c1 :: Either String (V.Vector Rating)
   let testData = decode NoHeader c2 :: Either String (V.Vector Rating)
   let modelv =  toVec baseData
   let testv = toVec testData
-  let (mu,urm,ium,uirm) = Bi.model modelv 
-  putStrLn $ "Mean Absolute Error: " ++ (show $ mae (Bi.predict mu urm ium uirm) testv)  
-
-basefile = "/home/lukas/oschena/ml-100k/base.csv"
-testfile = "/home/lukas/oschena/ml-100k/test.csv"
+  return (modelv, testv)

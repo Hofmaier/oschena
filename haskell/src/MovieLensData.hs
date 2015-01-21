@@ -28,6 +28,8 @@ UIdict
 )
 where
 
+-- | movielensData-script contains transformation of the initial data.
+-- this scipt is mainly for testing purposes.
 
 import System.IO
 import Data.Matrix
