@@ -1,5 +1,6 @@
 \documentclass[a4paper, 12pt]{article}
 \usepackage[ngerman]{babel}
+\usepackage[utf8]{inputenc}
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{listings}
@@ -8,8 +9,13 @@
 \pgfplotsset{compat=1.9}
 \usepackage{tikz}
 \usepackage{float}
-\author{Lukas Hofmaier}
-\title{Recommender System basierend auf Haskell \\ \vspace{2 mm} {\large Ein Report zu Userbased Collaborative Filtering und Matrixfaktorisation}}
+\author{Autor \\ Lukas Hofmaier \and Betreuer\\ Prof. Hansjörg Huser \\}
+\title{Recommender System basierend auf Haskell \\ \vspace{2 mm} {\large Ein Report zu Userbased Collaborative Filtering und Matrixfaktorisierung}}
+\date{
+\textsc{University of Applied Science Rapperswil}\\
+Projektarbeit \\ \today
+}
+
 \begin{document}
 
 \lstset{basicstyle=\small,
@@ -33,7 +39,7 @@ Die Algorithmen werden mit einer geeigneten Evaluation verglichen. Die Evaluatio
 \label{sec:problem}
 Dieser Abschnitt beschreibt, was ein Recommendersystem ist und weshalb es einen Mehrwert schaffen kann.
 
-Konsumenten werden heute in vielen Bereichen mit einer un"uberschaubaren Anzahl an Kaufm"oglichkeiten konfrontiert. In einem Webshop f"ur B"ucher oder Filme ist es es f"ur den Konsumenten beispielsweise schwierig, alle Artikel im Angebot anzuschauen und aufgrund dieser Evaluation die besten Artikel auszuw"ahlen. Beim Recommender-Problem geht es darum aus einer Mengen von Artikel (Items) ein sortierte Liste mit den empfehlenswertesten Artikel f"ur einen spezifischen Kunden (User) zu erstellen. Recommender kommen vorallem dort zum Einsatz, wo pers"onlicher Geschmack bei der Bewertung von Artikel eine wichtige Rolle spielt.
+Konsumenten werden heute in vielen Bereichen mit einer un"uberschaubaren Anzahl an Kaufm"oglichkeiten konfrontiert. In einem Webshop f"ur B"ucher oder Filme ist es f"ur den Konsumenten beispielsweise schwierig, alle Artikel im Angebot anzuschauen und aufgrund dieser Evaluation die besten Artikel auszuw"ahlen. Beim Recommender-Problem geht es darum aus einer Menge von Artikel (Items) ein sortierte Liste mit den empfehlenswertesten Artikel f"ur einen spezifischen Kunden (User) zu erstellen. Recommender kommen vorallem dort zum Einsatz, wo pers"onlicher Geschmack bei der Bewertung von Artikel eine wichtige Rolle spielt.
 
 Ein Recommendersystem kann eine Bewertung absch"atzen (vorhersagen), die ein bestimmter User einem bestimmten Item gibt. Recommender berechnen die Bewertungen f"ur Items, die der User noch nicht gesehen hat. Die Items mit den besten Bewertungen werden dem User empfohlen.
 
@@ -55,19 +61,19 @@ Es gibt zwei unterschiedliche Strategien f"ur Recommendersysteme: Content-based 
 \subsection{Content-based Filtering}
 \label{sec:contentbased}
 
-Bei Content-based Filtering wird zu jedem Artikel und zu jedem User ein Profil erstellt. Dieses Profil enth"alt Informationen "uber die Eigenschaften von User und Item. Beispielsweise k"onnte man alle angebotenen Filme nach ihrer Genrezugeh"origkeit bewerten. Ein Film hat beispielsweise einen Action und einen Romantikanteil. User k"onnen angeben, ob sie lieber Action oder Romantik m"ogen. Content-based Filtering sucht dann Filme, die am besten mit dem Userprofil passen. Die Schwierigkeit an Content-based Filtering ist das Erfassen von Daten zu jedem Item und zu jedem User. Jemand muss jeden Artikel im Angebot nach seinem Inhalt bewerten. Von jedem User muss ein Profil erstellt werden. Der User kann seine Preferenzen oft selber eingeben. Denn meisten User ist das zu m"uhsam.
+Bei Content-based Filtering wird zu jedem Artikel und zu jedem User ein Profil erstellt. Dieses Profil enth"alt Informationen "uber die Eigenschaften von User und Item. Beispielsweise k"onnte man alle angebotenen Filme nach ihrer Genrezugeh"origkeit bewerten. Ein Film hat beispielsweise einen Action und einen Romantikanteil. User k"onnen angeben, ob sie lieber Action oder Romantik m"ogen. Content-based Filtering sucht dann Filme, die am besten mit dem Userprofil des aktiven Users "ubereinstimmen. Eine Schwierigkeit an Content-based Filtering ist das Erfassen von Daten zu jedem Item und zu jedem User. Es ist n"otig den Inhalt jedes Items zu erfassen. Von jedem User muss ein Profil erstellt werden. Der User kann seine Pr"aferenzen oft selber eingeben. Denn meisten User ist das zu m"uhsam.
 
 \subsection{Collaborative Filtering}
 \label{sec:collaborativefiltering}
 
-Collaborative Filtering ist eine weitere M"oglichkeit das Re\-commender-Prob\-lem zu l"osen. Bei Collaborative Filtering wird das Verhalten von User in der Vergangenheit analysiert. Dabei werden Bewertungen oder Transaktionen angeschaut. Der Inhalt der Artikel ist egal. Da diese Strategie unab"angig vom Inhalt ist kann sie f"ur jedes beliebige Recommendersystem eingesetzt werden. Es kann also im e-Commerce sowie auch im Information Retrieval eingesetzt werden.  Es wird in vielen Webshops erfolgreich eingesetzt \cite{sarwar01}. 
+Collaborative Filtering ist eine weitere M"oglichkeit das Re\-commender-Prob\-lem zu l"osen. Bei Collaborative Filtering wird das Verhalten von User in der Vergangenheit analysiert. Dabei werden Bewertungen oder Transaktionen angeschaut. Der Inhalt der Artikel ist egal. Da diese Strategie unabh"angig vom Inhalt ist, kann sie f"ur jedes beliebige Recommendersystem eingesetzt werden. Es kann also im e-Commerce sowie auch im Information Retrieval eingesetzt werden.  Es wird in vielen Webshops erfolgreich eingesetzt \cite{sarwar01}. 
 
-Ziel des Collaborative Filtering ist, es einem User neue Items oder f"ur ein bestimmtes Item und einen bestimmten User eine Bewertung vorauszusagen. Typischweise gibt es eine Menge von $m$ Usern  $\mathnormal{U}$ und eine Menge von $n$ Items $\mathnormal{I}$. Jeder User $\mathnormal{u}$ hat eine Liste $\mathnormal{I_u}$ von Items, welche er bewertet hat. Diese Bewertung wird meistens, als numerischer Wert in einem Intervall ausgedr"uckt. Bei Filmen hat es sich zum Beispiel durchgesetzt, dass man eine Zahl zwischen 1 und 5 angibt, wobei die 5 aussagt, dass der Film dem User gefallen hat und eine 1 bedeutet, dass dem User der Film nicht gefallen hat. Diese Bewertungen werden von den User explizit eingegeben oder sie werden vom Kaufverhalten abgeleitet.
+Ziel des Collaborative Filtering ist, es einem User neue Items oder f"ur ein bestimmtes Item und einen bestimmten User eine Bewertung vorauszusagen. Typischweise gibt es eine Menge von $m$ Usern  $\mathnormal{U}$ und eine Menge von $n$ Items $\mathnormal{I}$. Jeder User $\mathnormal{u}$ hat eine Liste $\mathnormal{I_u}$ von Items, welche er bewertet hat. Diese Bewertung wird meistens, als numerischer Wert in einem definierten Intervall repr"asentiert. Bei Filmen hat es sich zum Beispiel durchgesetzt, dass man eine Zahl zwischen 1 und 5 angibt, wobei die 5 aussagt, dass der Film dem User gefallen hat und eine 1 bedeutet, dass dem User der Film nicht gefallen hat. Diese Bewertungen werden von den User explizit eingegeben oder sie werden vom Kaufverhalten abgeleitet.
 
 \subsubsection{Abgrenzung zu Content-based Filtering}
 \label{sec:definitioncf}
 
-Bei Collaborative Filtering geht man davon aus, dass man die Bewertungen anderer User dazu benutzen kann, um dem aktiven User ein Item zu empfehlen, das er noch nicht gesehen hat. Im Unterschied zu Contentbased Filtering ist der Inhalt des Items f"ur die Empfehlung nicht relevant. Das einzige was z"ahlt sind die Bewertungen anderer User.
+Bei Collaborative Filtering geht man davon aus, dass man die Bewertungen anderer User dazu benutzen kann, um dem aktiven User ein Item zu empfehlen, das er noch nicht gesehen hat. Im Unterschied zu Content-based Filtering ist der Inhalt des Items f"ur die Empfehlung nicht relevant. Das einzige was z"ahlt sind die Bewertungen anderer User.
 
 \subsubsection{Vor- und Nachteile}
 \label{sec:advandage}
@@ -77,22 +83,22 @@ Gegen"uber Contentbased Filtering bietet Collaborative Filtering folgenden Vor- 
 \item[Vorteile]
 \item
 \begin{description}
-\item[Kein Wissen "uber Inhalt n"otig] Es muss nicht jedes Item nach seinem Content dursucht werden. Meisten ist der Inhalt im Kontext der Empfehlung nicht brauchbar (L"ange, Kategorie, Jahr).
+\item[Kein Wissen "uber Inhalt n"otig] Es muss nicht jedes Item nach seinem Content durchsucht werden. Meistens ist der Inhalt im Kontext der Empfehlung nicht brauchbar (L"ange, Kategorie, Jahr).
 \item[Usergeschmack "andert] Collaborativ Filtering passt sich automatisch an.
 \item[Intuitiv] Jeder versteht "Kunden die diesen Artikel gekauft haben, haben auch diese Artikel gekauft".
 \end{description}
 \item[Nachteile]
 \item
 \begin{description}
-\item[Skalierbarkeit und Sparsity] Die User-Item Matrix ist normalerweise sehr gross (ca. $10^{7}$ User, ca. $~10^6$ Items) und sehr d"unn besetzt. Das f"uhrt zu Performanceproblemen, sobald man mit der Matrix rechnen m"ochte.
-\item[Shilling Attack] Wenn die User Items explizit bewerten k"onnen, besteht die Gefahr sogenannter Shilling Attacks. User haben die M"oglichkeit Items, unabh"angig ihrer pers"onlichen Pr"aferenz, gut oder schlecht zu bewerten. Dadurch werden diese Item "ofters oder seltener anderen Usern empfohlen.
+\item[Rechnen mit d"unn besetzten Matrizen] F"ur die Berechnung der Empfehlungen werden die Bewertungen zum Teil als Matrix abgespeichert. Die Zeilen repr"asentieren Items und die Kolonnen User. Diese Item-User Matrix ist normalerweise sehr gross (ca. $10^{7}$ User, ca. $~10^6$ Items) und d"unn besetzt. Rechenoperationen mit einer solchem Matrix sind aufw"andig.
+\item[Shilling Attacke] Wenn die User Items explizit bewerten k"onnen, besteht die Gefahr sogenannter Shilling Attacken. User haben die M"oglichkeit Items, unabh"angig ihrer pers"onlichen Pr"aferenz, gut oder schlecht zu bewerten. Dadurch werden diese Item "ofters oder seltener anderen Usern empfohlen.
 \end{description}
 \end{description}
 
 \subsubsection{Resultate von Collaborative Filtering}
 \label{sec:output}
 
-Die Collaborative Filtering Algorithmen in diesem Report nehmen bestehende Bewertungen und ein User-Item Tupel $(u,i)$ als Argument und liefern eine Vorhersage $p_{u,i}$ f"ur eine Bewertung.  $p_{u,i}$ dr"uckt die Wahrscheinlichkeit, dass Item $i$ f"ur User $u$ interessant ist, aus. 
+Die Collaborative Filtering Algorithmen in diesem Report nehmen bestehende Bewertungen und ein User-Item Tupel $(u,i)$ als Argument und liefern eine Vorhersage $p_{u,i}$ f"ur eine Bewertung.  $p_{u,i}$ dr"uckt die Wahrscheinlichkeit aus, dass Item $i$ f"ur User $u$ interessant ist.
 
 Meistens m"ochte man vom Recommendersystem f"ur einen aktiven User $u$ eine Liste mit Items, die ihn interessieren k"onnten und die er noch nicht gesehen hat. In diesem Fall liefert der Recommender eine Liste mit $N$ Elementen. Diese Liste enth"alt Items und ihre zugeh"origen $p_{u,i}$ Werte. Sie ist absteigend nach den $p_{u,i}$-Werten sortiert. Um diese Liste zu erstellen, muss der Recommender aber alle $p_{u,i}$ f"ur User $u$ berechnen.
 
@@ -105,19 +111,19 @@ Diese Liste nennt man Top-N Empfehlung. Abbildung \ref{fig:cfprocess} zeigt die 
   \label{fig:cfprocess}
 \end{figure}
 
-\subsubsection{Nearest-Neighbor vs. Latent Faktor Modelle}
+\subsubsection{N"achste-Nachbarn vs. Latent Faktor Modelle}
 \label{sec:cfmodels}
 
 Collaborative Filtering kann weiter in zwei unterschiedliche Methoden aufgeteilt werden:
 
 \begin{description}
-\item[Neighboorhood Methoden] Bei Neighboorhood Methoden werden f"ur jeden User "ahnliche User gesucht. Es wird eine Nachbarschaft mit "ahnlichen User erstellt.
+\item[N"achste-Nachbarn Methoden] Bei N"achste-Nachbarn Methoden werden f"ur jeden User "ahnliche User gesucht. Es wird eine Nachbarschaft mit "ahnlichen User erstellt. Diese Methoden nennt man auch speicherbasiert (englisch: memory-based).
 "Ahnlichkeit wird aufgrund von gemeinsam bewerteten Item berechnet. Wenn zwei User f"ur mehrere Items die selben Bewertungen vergeben, sind sie sich "ahnlich. Sie haben einen "ahnlichen Geschmack. Einem User werden diejenigen Items empfohlen, die er noch nicht kennt und die eine hohe Bewertung von "ahnlichen Usern erhalten haben.
-M"ochte man das Rating von einem User f"ur ein bestimmtes Item ab\-sch"atz\-en, schaut man, ob User in der Nachbarschaft das Item bereits bewertet haben. Aufgrund der "Ahnlickeit und den vorhandenen Ratings berechnet man das Rating das der User f"ur dieses Item abgeben w"urde.
-\item[Latent Faktor Model] Latent Factor Modelle repr"asentieren User und Items als Vektoren. Die Elemente sind Pr"aferenzen und Eigenschaften. Diese Vektoren werden aufgrund der vorhandenen Bewertungen berechnet.
+Wenn das Recommendersystem $p_{u,i}$ berechnen soll, beschafft es sich eine Liste mit allen Usern, die in der Nachbarschaft von $u$ sind und die das Item $i$ bewertet haben. Aufgrund der "Ahnlickeit zu $u$ und den vorhandenen Bewertungen der User in der Liste f"ur $i$, wird $p_{u,i}$ berechnet.
+\item[Latent Faktor Modell] Latent Faktor Modelle repr"asentieren User und Items als Vektoren. Recommendersysteme, die Latent Faktor Modelle verwenden, nennt man modellbasiert (englisch: model-based) Die Elemente sind Pr"aferenzen und Eigenschaften. Diese Vektoren werden aufgrund der vorhandenen Bewertungen berechnet. $p_{u,i}$ wird mit den Latent Faktor Vektoren berechnet. Die Berechnung der Latent Faktor Vektoren kann auf ein Optimierungsproblem reduziert werden.
 \end{description}
 
-Dieser Report beschreibt Algorithmen f"ur beide Modele. Userbased ist eine Neighborhood Methode. Matrixfaxtorisation nutzt ein Latent Factor Model.
+Dieser Report beschreibt Algorithmen f"ur beide Methoden. Userbased ist eine N"achste-Nachbarn Methode. Matrixfaktorisierung nutzt ein Latent Faktor Modell.
 
 \subsection{Herausforderungen}
 \label{sec:challenges}
@@ -125,7 +131,7 @@ Dieser Report beschreibt Algorithmen f"ur beide Modele. Userbased ist eine Neigh
 Bei der Implementierung von Recommendersystemen ergeben sich mehrere Herausforderungen.
 
 \begin{description}
-\item[Genauigkeit] Die Differenz der Empfehlungen, die das Recommendersystem macht, soll so wenig wie m"oglich von der tats"achlichen Bewertung abweichen.
+\item[Genauigkeit]  Die Differenz zwischen $p_{u,i}$ und der tats"achlichen Bewertung soll m"oglichst klein sein.
 \item[Skalierbarkeit] 
 Collaborative Filtering muss f"ur Millionen User und Items m"oglich sein. Die Technik soll also f"ur grosse Datenmengen skalieren.
 \item[Sparsity] F"ur eine grosse Menge an Items gibt es in der Regel nur eine kleine Anzahl an Items, die ein User auch bewertet hat. Wenn sich keine gemeinsamen Items zwischen den Usern finden, k"onnen auch keine Nachbarschaften gebildet werden.
@@ -139,12 +145,12 @@ In diesem Report werden mehrere Algorithmen zur L"osung des Recommenderproblem b
 \subsection{Daten}
 \label{sec:data}
 
-Ein Recommenderalgorithmus ben"otigt Daten, um das Model zu erstellen. F"ur die Evaluation sind ebenfalls vorhandende Bewertungen notwendig. Diese Daten liegen oft in Form einer Matrix vor. Die Zeilen rep"asentieren Items und die Kolonnen User. In den Zellen steht welche Bewertung ein User einem Item gegeben hat. Diese Matrix nennt man Ratingmatrix.
+Ein Recommenderalgorithmus ben"otigt Daten, um das Model oder die Nachbarschaften zu erstellen. F"ur die Evaluation sind ebenfalls vorhandende Bewertungen notwendig. Diese Daten liegen oft in Form einer Matrix vor. Die Zeilen rep"asentieren Items und die Kolonnen User. In den Zellen steht welche Bewertung ein User einem Item gegeben hat. Diese Matrix nennt man Ratingmatrix.
 
 Die Daten f"ur Recommender Systeme k"onnen auf zwei unterschiedliche Arten beschafft werden.
 
 \begin{description}
-\item[Explizites Feedback] Bei explizitem Feedback verl"asst man sich auf Daten die User explizit eingegen haben. Beispielsweise werden User aufgefordert, dem System ihre Pr"aferenzen anzugeben oder man pr"asentiert den User eine Reihe von Items, die er auf einer Skala von 1 bis 5 bewerten muss. Ein Problem von explizitem Feedback ist, dass es oft zu d"unn besetzten Ratingmatrizen f"uhrt, da die User keine Zeit haben, um alle verf"ugbaren Items zu bewerten.
+\item[Explizites Feedback] Bei explizitem Feedback verl"asst man sich auf Daten die User explizit eingegen haben. Beispielsweise werden User aufgefordert, dem System ihre Pr"aferenzen anzugeben oder man pr"asentiert den User eine Reihe von Items, die er auf einer Skala von 1 bis 5 bewerten muss. Ein Problem von explizitem Feedback ist, dass es oft zu d"unn besetzten Ratingmatrizen f"uhrt, da die User nur eine kleine Anzahl Items explizit bewerten.
 \item[Implizites Feedback] Implizites Feedback leitet die Bewertungen der User f"ur Items aus Beobachtungen ab. Das System beobachtet die Interaktionen, wie zum Beispiel in Vergangenheit gekaufte Artikel, Browsehistory, Suchanfragen oder Klickverhalten, des User mit dem System. Oft besteht implizites Feedback nur aus boolschen Werten. Das heisst entweder ein Ereignis ist eingetreten oder nicht.
 \end{description}
 
@@ -153,7 +159,7 @@ Die Daten f"ur Recommender Systeme k"onnen auf zwei unterschiedliche Arten besch
 
 F"ur das Projekt wurden die Daten von Movielens verwendet. MovieLens wurde von vom GroupLens Projekt an der Universit"at Minnesota entwickelt. Die Daten werden mit einer Webanwendung gesammelt. User k"onnen Filme bewerten und MovieLens gibt den User darauf eine Top-N Empfehlungsliste. Die Daten k"onnen von http://www.grouplens.org/node/12 heruntergeladen werden. 
 
-Das Datenset enth"alt die Bewertung von 943 User und 1682 Items. Die Daten sind in Kolonnen strukturiert. Die erste und zweite Kolonne enth"alt User und Item ID. Die dritte Kolonne enth"alt ein Zahl zwischen 1 und 5. Die repr"asentiert die Bewertung. Und in der vierten Kolonne ist ein Timestamp der Bewertung. Das Movielens Datenset enth"alt insgesamt 100000 Bewertungen. Abbildlung \ref{fig:movielens} zeigt einen Auschnitt der rohen Daten.
+Das Datenset enth"alt die Bewertung von 943 User und 1682 Items. Die Daten sind in Kolonnen strukturiert. Die erste und zweite Kolonne enth"alt User und Item ID. Die dritte Kolonne enth"alt ein Zahl zwischen 1 und 5. Die repr"asentiert die Bewertung. Und in der vierten Kolonne ist ein Zeitstempel der Bewertung. Das Movielens Datenset enth"alt insgesamt 100000 Bewertungen. Abbildlung \ref{fig:movielens} zeigt einen Auschnitt der rohen Daten.
 
 \begin{figure}
 \centering
@@ -168,36 +174,38 @@ Das Datenset enth"alt die Bewertung von 943 User und 1682 Items. Die Daten sind 
 \label{fig:movielens}
 \end{figure}
 
-F"ur den Userbased Collaborative Filter Algorithmus wurden die Daten in das CSV-Format transfomiert. Die Daten wurden mit dem Pythonskript \verb|tocsv| transformiert. Das CSV-Format eignet sich bessser, weil vorhandene Libraries f"ur das Einlesen der Daten genutzt werden k"onnen. In diesem Projekt wurden die Daten mit Paket \verb|cassava| eingelesen.
+F"ur den Userbased Collaborative Filter Algorithmus wurden die Daten in das CSV-Format transfomiert. Die Daten wurden mit dem Pythonskript \verb|tocsv| transformiert. Das CSV-Format eignet sich bessser, weil vorhandene Softwarebibliotheken f"ur das Einlesen der Daten genutzt werden k"onnen. In diesem Projekt wurden die Daten mit Paket \verb|cassava| eingelesen.
 
 F"ur die Matrixfaktorisierung wurden die Daten als Matrix abgespeichert. So muss das Programm nicht bei jedem Testlauf die Transformation von 100000 Bewertungen in eine Ratingmatrix vornehmen.
 
 \subsection{Vorgehen}
 \label{sec:procedure}
 
-Die Qualit"at des Recommenderalgorithmus wird durch die Genauigkeit der Bewertungsvorhersagen bestimmt. Man misst die Differenz zwischen vorhergesagter und tats"achlicher Bewertung. 
-Um Bewertungen zu approximieren muss man zuerst ein Model erstellen (Training). Danach werden mit diesem Model Vorhersagen berechnet (Test). Die Evaluierung wird in zwei Phasen aufgeteilt. 
+Die Qualit"at des Recommenderalgorithmus wird durch die Genauigkeit der Bewertungsvorhersagen bestimmt. Man misst die Differenz zwischen vorhergesagter Bewertung $p$ und tats"achlicher Bewertung $q$. 
+Um die Vorhersagen zu berechnen muss man zuerst ein Modell erstellen (Training). Danach werden mit diesem Modell Vorhersagen berechnet und mit den richtigen Bewertungen verglichen (Test). Die Evaluierung wird in zwei Phasen aufgeteilt. 
 
 \begin{enumerate}
 \item Trainingsphase
 \item Testphase
 \end{enumerate}
 
-In der Trainingsphase wird ein Model aufgrund einer Menge vorhandender Bewertungen berechnet. Diese Menge nennt man das Trainingsset. Die Funktion \verb|train| nimmt als Argument das Trainingsset und gibt als Wert ein Model zur"uck. Dieses Model wird in der Trainingsphase der \verb|predict|-Funktion als Argument "ubergeben. 
+\subsubsection{Trainingsphase}
 
-Bei Userbased Collaborative Filtering ist das Model die Nachbarschaft jedes User. Bei Matrixfaktorisierung sind die Latent Faktor Vektoren das Model.
+In der Trainingsphase wird ein Modell aufgrund einer Menge vorhandender Bewertungen berechnet. Diese Menge nennt man das Trainingsset. Die Funktion \verb|model| nimmt als Argument das Trainingsset und gibt als Wert ein Modell zur"uck. Dieses Modell wird in der Trainingsphase der \verb|predict|-Funktion als Argument "ubergeben. 
 
-Die \verb|predict|-Funktion nimmt das Model, einen User $u$ und ein Item $i$ als Argumente und gibt als Wert die approximierte Bewertung $p$ zur"uck.
+Bei Userbased Collaborative Filtering ist das Modell die Nachbarschaft jedes User. Bei Matrixfaktorisierung sind die Latent Faktor Vektoren das Modell.
+
+\subsubsection{Testphase}
+In der Testphase werden die Vorhersagen berechnet und mit den tats"achlichen Bewertungen verglichen. Die \verb|predict|-Funktion nimmt das Modell, einen User $u$ und ein Item $i$ als Argumente und gibt als Wert die approximierte Bewertung  $p$ zur"uck.
 
 Um die Genauigkeit zu bestimmen, werden alle User-Item Paare aus einer Menge vorhandener Bewertungen mit der Funktion \verb|predict| auf die approximierte Bewertung $p$ abgebildet. Die Menge der vorhandenen Bewertungen nennt man Testset. Sie unterscheidet sich vom Trainingset.
 
 \subsubsection{Evaluationsmetrik}
 \label{sec:evaluationmetrik}
 
-Es gibt verschieden Evaluationsmetriken. In diesem Projekt wurde der Mean Absolute Error als Metrik verwendet. Der Mean Absolute Error berechnet sich wie folgt:
+Es gibt verschieden Evaluationsmetriken. In diesem Projekt wurde die Metrik Mean Absolute Error ($MAE$) verwendet. Sie wird f"ur die Evaluation von Recommendersystemen h"aufig verwendet \cite{sarwar01}. Der Mean Absolute Error berechnet sich wie folgt:
 
-Von allen approximierten Werten $p$ wird die Differenz zur tats"achlichen Bewertung $q$ berechnet. Die Abweichungen vom tats"achlichen Wert nennt man Residuen. Von der Differenz wird der Betrag berechnet. Die Abweichungen werden summmiert. Schliesslich bestimmt man die mittlere Abweichung, indem man durch Anzahl Bewertungen $N$ im Testset teilt 
- Diese Metrik nennt man den Mean Absolute Error ($MAE$). Sie wird f"ur die Evaluation von Recommendersystemen h"aufig verwendet \cite{sarwar01}. 
+Von allen approximierten Werten $p$ wird die Differenz zur tats"achlichen Bewertung $q$ berechnet. Die Abweichungen vom tats"achlichen Wert nennt man Residuen. Von der Differenz wird der Betrag berechnet. Die Abweichungen werden summiert. Schliesslich bestimmt man die mittlere Abweichung, indem man durch Anzahl Bewertungen $N$ im Testset teilt 
 
 \begin{equation}
   \label{eq:mae}
@@ -229,21 +237,20 @@ Die Experimente wurden auf einem PC-Notebook durchgef"uhrt. Das Notebook hat 8GB
 \end{tabular}
 \end{center}
 
-
 \section{Unpers"onliche Empfehlungstechniken}
 \label{sec:simple}
 
-Dieser Abschnitt beschreibt einfache, alternative, M"oglichkeiten relative gute Empfehlungen zu generieren. Diese Techniken werden in den nachfolgenden Abschnitten als Baselinealgorithmus verwendet um zu "uberpr"ufen, ob das Recommendersystem eine h"ohere Genauigkeit erzielt. So ist einfach ersichtlich, ob die Collaborative Filtering Algorithmen einen qualitativen Vorteil bringen.
+Dieser Abschnitt beschreibt einfache, alternative, M"oglichkeiten relative gute Empfehlungen zu generieren. Diese Techniken werden in den nachfolgenden Abschnitten als Baselinealgorithmus verwendet um zu "uberpr"ufen, ob die beschriebenen Algorithmen einen tieferen MAE-Wert erreichen. So ist einfach ersichtlich, ob die Collaborative Filtering Algorithmen einen qualitativen Vorteil bringen.
 
 Um einem User Items zu empfehlen werden oft einfache Statistiken berechnet. Diese Methoden sind unpers"onlich. Das heisst die Top-N Empfehlungen sind nicht vom pers"onlichem Geschmack von $u$ abh"angig. Jeder User erh"alt die selben Empfehlungen. 
 
 Diese Technik wird in vielen Bereichen angewendet. Restaurantf"uhrer oder Filmkritikwebseiten erstellen oft Ranglisten, welche Restaurants oder Filme von allen Usern im Durchschnitt am besten bewertet werden. Items mit den h"ochsten Durchschnittswerten, werden dem User empfohlen \cite{jannach11}.
 
-Die einfachste Methode eine unbekannte Bewertung $b_{i,i}$ abzusch"atzen, ist den Durschnitt aller Bewertungen zu berechnen.
+Die einfachste Methode eine unbekannte Bewertung $p_{u,i}$ abzusch"atzen, ist den Durschnitt aller Bewertungen zu berechnen.
 
 \begin{equation}
   \label{eq:avg}
-  b_{u,i} = \mu
+  p_{u,i} = \mu
 \end{equation}
 
 Wenn diese Methode wie in Abschnitt \ref{sec:procedure} evaluiert wird, erh"alt man einen MAE von 0.968. Dieser Wert kann noch weiter minimiert werden.
@@ -260,12 +267,12 @@ Die Abweichung $b_u$ wird bei der Vorhersage zu $\mu$ addiert, um bei der Evalua
 
 \begin{equation}
   \label{eq:bui}
-  b_{u,i} = \mu + b_u
+  p_{u,i} = \mu + b_u
 \end{equation}
 
 Wenn man die Tendenz der User, Item durchschnittlich h"oher oder tiefer zu bewerten, ber"ucksichtig wie in der Gleichung \ref{eq:bui} beschrieben, kann man den MAE auf 0.8501 senken. 
 
-Items haben ebenfalls eine Abweichung vom Durchschnitt. Bestimmte Filme zum beispiel k"onnen tendenziel eine h"ohere Bewertung von allen Usern erhalten. Es kann also noch die Abweichung $bi$ jedes Items berechnet werden.
+Items haben ebenfalls eine Abweichung vom Durchschnitt. Bestimmte Filme k"onnen tendenziel eine h"ohere Bewertung von allen Usern erhalten. Es kann also noch die Abweichung $bi$ jedes Items berechnet werden.
 
 \begin{equation}
   \label{eq:bi}
@@ -276,37 +283,14 @@ Diese Abweichung addiert man zur Vorhersage $b_{ui}$.
 
 \begin{equation}
   \label{eq:baseline}
-  b_{u,i} = \mu + b_u + b_i
+  p_{u,i} = \mu + b_u + b_i
 \end{equation}
 
 Wenn man die statistischen Abweichungen der einzelnen User und Items bei der Vorhersage einer Bewertung $b_{ui}$ wie in Gleichung \ref{eq:baseline} ber"ucksichtig, erreicht man einen MAE von 0.76814.
 
-$b_{ui}$ kann relativ einfach aufgrund der vergangen Bewertungen berechnet werden.
+$p_{ui}$ kann relativ einfach aufgrund der vergangen Bewertungen berechnet werden.
 
-Listing \ref{lst:baseline} zeigt die Implemenation der Baseline Algorithmen.
-
-\begin{lstlisting}[caption=Baseline predictor, label=lst:baseline]
-import Math.Statistics
-bui :: User -> Item -> Double
-bui u i = mu + bu + bi
-  where mu = avg allratings
-        bu = computebu u
-        bi = computebu i
-
-computebu :: User -> Double
-computebu u = sum ratings / nrOfratings
-              where ratings = lookup u usermap
-                    nrOfratings = length ratings
-
-computebi :: Item -> Double
-computebi i = sum ratings / nrOfratings
-              where ratings = lookup i itemmap
-                    nrOfratings = length ratings
-\end{lstlisting}
-
-$\mu$ kann einfach berechnet werden. Das Modul \verb|Math.Statistics| stellt die Funktion \verb|avg| zur Verf"ugung. \verb|allratings| gibt eine Liste aller Bewertungen zuru"ck. \verb|usermap| und \verb|itemmap| sind Maps. Die Funktion \verb|lookup| l"auft in O(logn).
-
-In Diagramm \ref{fig:maebaselines} werden die verschiedenen, unpers"onlichen Recommender miteinander verglichen. Die Kombination aus Durchschnitt und Abweichung vom Durschnitt kann die Bewertungen der User am besten vorhersagen. Das Diagramm zeigt den Mean Absolute Error. Dieser Wert ist kurz gesagt der Durchschnitt der Abweichung der Vorhersage von tats"achlichen Wert.
+In Abbildung \ref{fig:maebaselines} werden die verschiedenen, unpers"onlichen Recommender miteinander verglichen. 
 
 \begin{figure}
   \centering
@@ -314,12 +298,12 @@ In Diagramm \ref{fig:maebaselines} werden die verschiedenen, unpers"onlichen Rec
   \begin{axis}[
     xbar, xmin=0,
     width=12cm, enlarge y limits=0.5,
-    symbolic y coords = {Durchschnitt,Item-AVG,User-AVG,$b_{ui}$},
+    symbolic y coords = {Globaler Durchschnitt,mit Usertendenz $b_u$, mit User-/Itemtendenz},
     xlabel={MeanAbsoluteError},
     ytick = data,
     nodes near coords, nodes near coords align={horizontal},
     ]
-    \addplot coordinates {(0.9680,Durchschnitt) (0.930,User-AVG) (0.877,Item-AVG) (0.861,$b_{ui}$)};
+    \addplot coordinates {(0.968,Globaler Durchschnitt) (0.8501,mit Usertendenz $b_u$) (0.76814,mit User-/Itemtendenz)};
   \end{axis}
 \end{tikzpicture}
   
@@ -330,29 +314,27 @@ In Diagramm \ref{fig:maebaselines} werden die verschiedenen, unpers"onlichen Rec
 
 \section{Userbased Collaborative Filtering}
 
-Die Technik Userbased Collaborative Filtering ist auch als k-NN (nearest-neighbor) oder Memory-based Collaborative Filtering bekannt. Der GroupLens Usenet Articel Recommender verwendete als einer der ersten Recommender Systeme Userbased Collaborative Filtering. Ringo Music Recommender und der Bell Core Video Recommender verwenden auch Userbased CF \cite{ekstrand11}.
+Die Technik Userbased Collaborative Filtering ist auch als k-NN (n"achste-Nachbarn) oder speicherbasiertes Collaborative Filtering bekannt. Der GroupLens Usenet Articel Recommender verwendete als einer der ersten Recommender Systeme Userbased Collaborative Filtering. Ringo Music Recommender und der Bell Core Video Recommender verwenden auch Userbased CF \cite{ekstrand11}.
 
-Userbased Collaborative filtering kann in zwei Schritte aufgeteilt werden. 
+Userbased Collaborative Filtering kann in zwei Schritte aufgeteilt werden. 
 
 \begin{description}
-\item[Nachbarschaft bestimmen] F"ur jeden User $u$ wird eine Nachbarschaft $U_u$ erstellt. Diese Nachbarschaft $U_u$ enth"alt Tupel mit anderen Usern und deren "Ahnlichkeit $sim$ zu $u$. Die Nachbarschaft ist sortiert nach "Ahnlichkeit. Die Nachbarschaft wird aufgrund der Trainingsdaten erstellt. Sie stellt das Model von Userbased Collaborative Filtering dar. Wenn im zweiten Schritt eine unbekannte Bewertung abgesch"atzt wird, wird auf die vorberechneten Nachbarschaften zugegriffen.
-\item [gewichtetes Mittel bilden] Aus $U_u$ bildet man f"ur ein Item $i$ und User $u$ eine Menge $N \subseteq U_u$. $N$ ist erf"ullt folgende Anforderungen. $N$ enth"alt $k$ Elemente. $N$ enth"alt nur User $u'$ die Item $i$ bewertet haben. $N$ ist absteigend nach der "Ahnlichkeit $sim(u,u')$ sortiert. F"ur alle User $u' \in N$, multipliziert man das Rating von User $u'$ mit dem Wert der "Ahnlichkeit $sim(u,u')$. Dadurch werden Ratings von User, die sehr "ahnlich sind st"arker gewichtet. 
+\item[Nachbarschaft bestimmen] F"ur jeden User $u$ wird eine Nachbarschaft $U_u$ erstellt. Diese Nachbarschaft $U_u$ enth"alt Tupel mit allen anderen Usern und deren "Ahnlichkeit $sim$ zu $u$. Die Nachbarschaft wird aufgrund der Trainingsdaten erstellt. Sie stellt das Modell von Userbased Collaborative Filtering dar. Wenn im zweiten Schritt eine unbekannte Bewertung abgesch"atzt wird, wird auf die vorberechneten Nachbarschaften zugegriffen.
+\item [gewichtetes Mittel bilden] Aus $U_u$ bildet man f"ur ein Item $i$ und User $u$ eine Menge $N \subseteq U_u$. $N$ erf"ullt folgende Anforderungen. $N$ enth"alt $k$ Elemente. $N$ enth"alt nur User $u'$ die Item $i$ bewertet haben. $N$ ist aufsteigend nach der "Ahnlichkeit $sim(u,u')$ sortiert. F"ur alle User $u' \in N$, multipliziert man die Bewertung von User $u'$ mit dem Wert der "Ahnlichkeit $sim(u,u')$. Alle Produkte werden summiert und normiert. Dadurch werden Bewertungen von User, die sehr "ahnlich sind st"arker gewichtet. 
 \end{description}
 
-Userbased Collaborative Filtering sucht nach User, die "ahnlich wie der aktive User $u$ sind. Um das Model zu erstellen, werden die vergangene Bewertungen der User verwendet.
-
-Die Technik um "ahnliche User zu finden heisst k- Nearest-Neighbors (kNN). 
+Userbased Collaborative Filtering sucht nach User, die "ahnlich wie der aktive User $u$ sind. Um das Modell zu erstellen, werden die vergangene Bewertungen der User verwendet.
 
 \subsection{Informelles Beispiel}
 \label{sec:example}
 
-Bespielsweise m"ochte man die Bewertung von User Peter f"ur den Film Titanic, den Peter noch nicht bewertet hat, vorhersagen. Man sucht nach anderen Usern, die Filme "ahnlich bewerten wie Peter. Dazu beschaft man sich f"ur jeden anderen User eine Liste aller Filme, die Peter und der andere User bewertet haben. So findet man heraus welche $k$ User Peter am "ahnlichsten sind. Das ist seine Nachbarschaft $N$. Um vorherzuagen welche Bewertung Peter Titanic gibt, verwendet man die Bewertungen f"ur Titanic der User in $N$. Wenn "ahnliche User Titanic eine hohe Bewertung geben, wird eine hohe Bewertung von Peter vorhergesagt. Die Bewertung von Usern, die Peter sehr "ahnlich sind, haben ein gr"osseres Gewicht als die Bewertungen von Usern, die Peter un"ahnlich sind.
+Bespielsweise m"ochte man die Bewertung von User Peter f"ur den Film Titanic, den Peter noch nicht bewertet hat, vorhersagen. Man sucht nach anderen Usern, die Filme "ahnlich bewerten wie Peter. Dazu beschaft man sich f"ur jeden anderen User eine Liste aller Filme, die Peter und der andere User bewertet haben. So findet man heraus, welche $k$ User Peter am "ahnlichsten sind. Das ist seine Nachbarschaft $N$. Um vorherzusagen, welche Bewertung Peter Titanic gibt, verwendet man die Bewertungen f"ur Titanic der User in $N$. Wenn "ahnliche User Titanic eine hohe Bewertung geben, wird eine hohe Bewertung von Peter vorhergesagt. Die Bewertung von Usern, die Peter sehr "ahnlich sind, haben ein gr"osseres Gewicht als die Bewertungen von Usern, die Peter un"ahnlich sind.
 
 
 \subsection{Nachbarschaft bestimmen}
 \label{sec:neigborhood}
 
-Dieser Abschnitt beschreibt, wie die Nachbarschaft  $N \subseteq U$ eines einzelnen Users $u$ erstellt wird. Eine Nachbarschaft ist eine sortierte Liste von Usern. Sie ist nach der "Ahnlichkeit $sim(u,v)$ sortiert.  Der Wert $sim(u,v)$ ist ein Model der "Ahnlichkeit zwischen dem aktiven User und einem anderen User $v$. Zuerst wird beschrieben, wie $sim(u,v)$ definiert werden kann.
+Dieser Abschnitt beschreibt, wie die Nachbarschaft  $N \subseteq U$ eines einzelnen Users $u$ erstellt wird. Eine Nachbarschaft ist eine sortierte Liste von Usern. Sie ist nach der "Ahnlichkeit $sim(u,v)$ sortiert.  Der Wert $sim(u,v)$ ist ein Modell der "Ahnlichkeit zwischen dem aktiven User und einem anderen User $v$. Zuerst wird beschrieben, wie $sim(u,v)$ definiert werden kann.
 
 Es gibt mehrere M"oglichkeiten die "Ahnlichkeit zwischen zwei User zu evaluieren. In diesem Report werden zwei Metriken beschrieben
 
@@ -361,9 +343,9 @@ Es gibt mehrere M"oglichkeiten die "Ahnlichkeit zwischen zwei User zu evaluieren
   \item euklidische Distanz
 \end{itemize}
 
-Es ist nur m"oglich die "Ahnlichkeit zwischen 2 User zu berechnen, wenn es ein Subset der Items gibt, die beide User bewertet haben. Wenn dieses Subset leer ist, k"onnen die nachfolgenden Methoden nicht angewendet werden. Der Recommender wurde so implementiert, dass User, die keine gemeinsamen Items haben einen "Ahnlichkeitswert von 0 haben. Das heisst, dass die Bewertungen dieser User keinen Einfluss auf die Berechnung der unbekannten Bewertung haben. 
+Es ist nur m"oglich die "Ahnlichkeit zwischen zwei User zu berechnen, wenn beide User ein oder mehrere Items gemeinsam bewertet haben. Wenn es keine gemeinsamen Items gibt, k"onnen die nachfolgenden Methoden nicht angewendet werden. Der Recommender wurde so implementiert, dass User, die keine gemeinsamen Items haben einen "Ahnlichkeitswert von 0 haben. Das heisst, dass die Bewertungen dieser User keinen Einfluss auf die Berechnung von $p_{u,i}$ haben. 
 
-Listing \ref{lst:shareditems} zeigt, wie sich das Programm eine Liste aller gemeinsamen Items beschafft. Die Funktion \verb|shareditems| gibt nimmt zwei User und eine MultiMap und gibt alle gemeinsamen Items zur"uck. 
+Listing \ref{lst:shareditems} zeigt, wie sich das Programm eine Liste aller gemeinsamen Items beschafft. Die Funktion \verb|shareditems| nimmt zwei User und eine MultiMap und gibt alle gemeinsamen Items zur"uck. Die Multimap bildet User $u$ auf Items $I_u$ ab.
 
 \begin{lstlisting}[caption=Implementation von shareditems, label=lst:shareditems]
 shareditems :: User -> User -> Multimap User Item -> [Items]
@@ -401,7 +383,7 @@ Das Paket \verb|Math.Statistics| stellt die Funktion \verb|pearson| zur Verf"ugu
 Bei der Verwendung der Pearson Korrelation sind mehrere Schwierigkeiten bei der Evaluation aufgetreten.
 
 \begin{description}
-\item[Hohe "Ahnlichkeit bei wenig Items] Die Berechnung Pearson Korrelation zwischen zwei Usern, die nur ein Item gemeinsam bewertet haben f"uhrt zu relativ hohen "Ahnlichkeitswerten, obwohl zwei User die nur ein gemeinsames Item haben eher un"ahnlich sind.
+\item[Hohe "Ahnlichkeit bei wenig Items] Die Berechnung Pearson Korrelation zwischen zwei Usern, die nur ein Item gemeinsam bewertet haben f"uhrt zu relativ hohen "Ahnlichkeitswerten, obwohl zwei User, die nur ein gemeinsames Item haben eher un"ahnlich sind.
 \item[Abweichung 0] Wenn die Bewertungen eines Users f"ur alle gemeinsame Items  $I_u \cap I_v$ gleich sind f"uhrt das zu einer Standardabweichung von 0. Da in diesem Fall der Nenner in Gleichung \ref{eq:pearson1} 0 wird, ist der Korrelationskoeffizient nicht definiert, wenn ein User alle gemeinsamen Items gleich bewertet.
 \item[Nur ein gemeinsamens Item] Wenn  $I_u \cap I_v$ nur ein gemeinsames Item enth"alt ist die Standardabweichung immer 0.
 \end{description}
@@ -439,7 +421,7 @@ Statt
 wird die Standardabweichung wie folgt berechnet.
 
 \begin{equation}
-  \label{eq:naiv}
+  \label{eq:naiv1}
   \sqrt{\sum_{i \in I_u \cap I_v}( r_{v,i} - b_u)^2}
 \end{equation}
 
@@ -471,16 +453,17 @@ Die euklidische Distanz ber"ucksichtigt nicht, dass bestimmte User permanent h"o
 
 In diesem Abschnitt wird beschrieben, wie die Nachbarschaft von Abschnitt \ref{sec:neigborhood} genutzt werden kann, um eine unbekannte Bewertung des aktiven User $u$ f"ur ein Item $i$ vorauszusagen.
 
-\subsubsection{Nachbarschaft generieren}
+\subsubsection{Nachbarschaft $N$ abfragen}
 \label{sec:generate}
 
 M"ochte man zu User $u$ und Item $i$ eine Bewertung vorhersagen, ben"otigt man eine geeignete Nachbarschaft $N \subseteq U$. User in $N$ m"ussen das Item $i$ bewertet haben und dem User $u$ m"oglichst "ahnlich sein.
 
-Zuerst beschafft man sich die komplette Nachbarschaft eines User. Aus dieser Nachbarschaft filtert man diejenigen User, die das Item $i$ bewertet haben. Die gefilterte Liste wird aufsteigend nach der "Ahnlichkeit $sim(u,v)$ sortiert. Aus dieser Liste entnimmt man die $k$ ersten Elemente. Diese Liste entspricht $N$. 
+Zuerst beschafft man sich eine Liste aller anderen User und deren "Ahnlichkeitwerten $sim(u,u
+')$. Aus dieser Liste filtert man diejenigen User, die das Item $i$ bewertet haben. Die gefilterte Liste wird aufsteigend nach der "Ahnlichkeit $sim(u,v)$ sortiert. Aus dieser Liste entnimmt man die $k$ ersten Elemente. Diese Liste entspricht $N$. 
 
-In Listing \ref{lst:neighborhood} wird gezeigt, wie die Abfrage in Haskell implementiert wurde. Die Funktion \verb|neighborhood| nimmt neben dem User $u$ und dem Item $i$ noch eine Ganzahl $k$ als Paramater. $k$ bestimmt die Gr"osse der Nachbarschaft, die f"ur die Vorhersage verwendet wird.
+In Listing \ref{lst:neighborhood} wird gezeigt, wie die Abfrage in Haskell implementiert wurde. Die Funktion \verb|neighborhood| nimmt neben dem User $u$ und dem Item $i$ noch eine Ganzahl $k$ als Parameter. $k$ bestimmt die Gr"osse der Nachbarschaft $N$, die f"ur die Vorhersage verwendet wird.
 
-\begin{lstlisting}[caption=Funktion um die Nachbarschaft f"ur ein User und ein Item zu generieren, label=lst:neighborhood]
+\begin{lstlisting}[caption=Funktion um die Nachbarschaft f"ur ein User und ein Item zu abzufragen, label=lst:neighborhood]
 import Data.MultiMap
 neihborhood :: User
             -> Item
@@ -492,12 +475,12 @@ neihborhood u i k m = take k (reverse (sort onlyItem i u ))
         allneighbors = lookup u m
 \end{lstlisting}
 
-Bei der Berechnung von $p_{u,i}$ kann die Gr"osse der Nachbarschaft $N$ frei gew"ahlt werden. Die Gr"osse der Nachbarschaft ist definiert als Parameter $k$. Wenn $k$ zu klein ist, werden nur wenige Bewertungen von anderen User zu Berechnung verwendet. Da $p_{u,i}$ in diesem Fall nur von wenigen anderen Usern abh"angig ist, ist es anf"allig f"ur Ausreisser. Wenn $k$ zu gross gew"ahlt wird, werden auch die Bewertungen der User die dem aktiven User un"ahnlich sind ber"ucksichtigt. Diese Bewertungen sind f"ur den aktiven User nicht interessant. 
+Bei der Berechnung von $p_{u,i}$ kann die Gr"osse der Nachbarschaft $N$ frei gew"ahlt werden. Wenn $k$ zu klein ist, werden nur wenige Bewertungen von anderen User zu Berechnung verwendet. Da $p_{u,i}$ in diesem Fall nur von wenigen anderen Usern abh"angig ist, ist es anf"allig f"ur Ausreisser. Wenn $k$ zu gross gew"ahlt wird, werden auch die Bewertungen der User, die dem aktiven User un"ahnlich sind ber"ucksichtigt. Diese Bewertungen sind f"ur den aktiven User nicht interessant. 
 
 \subsubsection{Unbekannte Bewertung berechnen}
 \label{sec:predict}
 
-Wenn man $N$ generiert hat, kann man damit eine unbekannte Bewertung $p_{u,i}$ absch"atzen. Jeden User $u' \in N$ bildet man auf das Produkt der "Ahnlichkeit $sim(u,u')$ mit der Bewertung $r_{u',i}$ ab. Die Werte der Abbildung werden summiert. Damit man eine Zahl zwischen 1 und 5 erh"alt wird diese Summe normiert. Die Summe wird mit der Summe aller "Ahnlichkeitswerte $\sum_{u' \in N}{|s(u,u')|}$ normiert. Gleichung \ref{eq:computeprediction} beschreibt die Berechnung von $p_{u,i}$ formel.
+Wenn man $N$ generiert hat, kann man damit eine unbekannte Bewertung $p_{u,i}$ absch"atzen. Jeden User $u' \in N$ bildet man auf das Produkt der "Ahnlichkeit $sim(u,u')$ mit der Bewertung $r_{u',i}$ ab. Die Werte der Abbildung werden summiert. Damit man eine Zahl zwischen 1 und 5 erh"alt, wird diese Summe normiert. Die Summe wird mit der Summe aller "Ahnlichkeitswerte $\sum_{u' \in N}{|s(u,u')|}$ normiert. Gleichung \ref{eq:computeprediction} beschreibt die Berechnung von $p_{u,i}$ formel.
 
 \begin{equation}
   \label{eq:computeprediction}
@@ -534,6 +517,8 @@ Wenn man das in die Gleichung \ref{eq:computeprediction} einsetzt erh"alt man
   p_{u,i} = \bar{r_u} + \frac{\sum_{u' \in N}{sim(u,u') (r_{u',i} - \bar{r_{u'}})}}{\sum_{u' \in N}{|s(u,u')|}}
 \end{equation}
 
+Die Resultate der optimierten Berechnung werden in Abschnitt \ref{sec:eqpredictresults} pr"asentiert.
+
 \subsection{Resultate}
 \label{sec:userbasedresults}
 
@@ -557,8 +542,6 @@ In Abschnitt \ref{sec:neigborhood} wurden drei "Ahnlichkeitsmetriken vorgestellt
 \item Euklidische Distanz
 \end{itemize}
 
-F"ur jede "Ahnlichkeitmetrik wurde ein Userbased-Model mit dem Trainingset erstellt. Diese wurden mit dem Testset evaluiert. Der Vegleich der "Ahnlichkeitmetriken wurde mit einer Nachbarschaftsgr"osse $k$ von 5 erstellt und $p_{i,u}$ wurde mit der Formel \ref{eq:optcomputeprediction} berechnet. Abbildung \ref{fig:comparesim} zeigt die Resultate der Experimente.
-
 \begin{figure}
 \begin{tikzpicture}
   \begin{axis}[
@@ -573,16 +556,17 @@ F"ur jede "Ahnlichkeitmetrik wurde ein Userbased-Model mit dem Trainingset erste
   \end{axis}
 \end{tikzpicture}
 \centering
-\label{fig:comparesim}
 \caption{Vergleich der "Ahnlichkeitsmetriken euklidische Distanz und Pearson Korrelation}
+\label{fig:comparesim1}
 \end{figure}
 
-Der Vergleich der "Ahnlichkeitsmetriken zeigt, dass der Userbased Collaborative Filtering Algorithmus den kleinsten Fehler beim berechnen von unbekannten Bewertungen mit dem optimierten Korrelationskoeffizienten macht.
+Der Vegleich der "Ahnlichkeitmetriken wurde mit einer Nachbarschaftsgr"osse $k$ von 5 erstellt und $p_{i,u}$ wurde mit der Formel \ref{eq:optcomputeprediction} berechnet. Abbildung \ref{fig:comparesim1} zeigt die Resultate der Experimente.
+
+Der Vergleich der "Ahnlichkeitsmetriken zeigt, dass der optimierten Korrelationskoeffizienten den kleinsten Fehler macht.
+
 
 \subsubsection{Berechnung unbekannter Bewertungen}
 \label{sec:eqpredictresults}
-
-Eine unbekannte Bewertung kann auf mehrere Arten berechnet werden. In Abschnitt \ref{sec:predict} wurden die Formeln \ref{eq:computeprediction} und \ref{eq:optcomputeprediction} zur Berechnung  von $p_{u,i}$ beschrieben. Bei der ersten Variante wird das Produkt von "Ahnlichkeit und Bewertung berechnet. Bei der zweiten Variante nur das Produkt zwischen Abweichung und "Ahnlichkeit. Beide Formeln wurden mit den Testdaten evaluiert. Wie in Abbildung \ref{fig:predicteq} ersichtlich hat diese "Anderung der Berechnung einen starken Einfluss auf den MAE. Die Messungen wurden mit einer Nachbarschaftsgr"osse von 20 und dem Pearson Korrelationskoeffizienten durchgef"uhrt.
 
 \begin{figure}
 \begin{tikzpicture}
@@ -598,9 +582,12 @@ Eine unbekannte Bewertung kann auf mehrere Arten berechnet werden. In Abschnitt 
   \end{axis}
 \end{tikzpicture}
 \centering
-\label{fig:predicteq}
 \caption{Vergleich der Berechnungmethoden f"ur $p_{u,i}$}
+\label{fig:predicteq}
 \end{figure}
+
+Eine unbekannte Bewertung kann auf mehrere Arten berechnet werden. In Abschnitt \ref{sec:predict} wurden die Formeln \ref{eq:computeprediction} und \ref{eq:optcomputeprediction} zur Berechnung  von $p_{u,i}$ beschrieben. Bei der ersten Variante wird das Produkt von "Ahnlichkeit und Bewertung berechnet. Bei der zweiten Variante nur das Produkt zwischen Abweichung und "Ahnlichkeit. Beide Formeln wurden mit den Testdaten evaluiert. Wie in Abbildung \ref{fig:predicteq} ersichtlich hat diese "Anderung der Berechnung einen starken Einfluss auf den MAE. Die Messungen wurden mit einer Nachbarschaftsgr"osse von 20 und dem Pearson Korrelationskoeffizienten durchgef"uhrt.
+
 
 \subsubsection{Gr"osse der Nachbarschaft}
 \label{sec:neighborhoodsize}
@@ -625,6 +612,8 @@ Die Gr"osse der Nachbarschaft $k$ hat grossen Einfluss auf die Qualit"at des Rec
 
 Abbildung \ref{fig:nrofneighbors1} zeigt den Mean Absolute Error in Abh"angigkeit der Nachbarschaftsgr"osse $k$. F"ur das gegebene Testset funktioniert eine Nachbarschaftsgr"osse von 10 am besten.
 
+\subsubsection{Fazit}
+
 \begin{figure}
   \centering
 \begin{tikzpicture}
@@ -644,18 +633,18 @@ Abbildung \ref{fig:nrofneighbors1} zeigt den Mean Absolute Error in Abh"angigkei
 \label{fig:uuvsbui}
 \end{figure}
 
-F"ur den Vergleich von Abbildung \ref{fig:uuvsbui} wurde der Userbased Algorithmus mit einer Nachbarschaftsgr"osse von 30 und mit der optimierter Pearson Korrelation Metrik ausgef"uhrt. 
+Die Experimente zeigen, dass die optimierte Pearson Korrelation und die Berechnung mit Abweichung mit einer Nachbarschaftsgr"osse von 10 die besten Resultate bei der Evaluation erreichen.
 
-Wie man Abbildung \ref{fig:uuvsbui} entnehmen, kann bringt Userbased Collaborative Filtering einen qualitativen Vorteil im Vergleich zur unpers"onlichen Empfehlungstechnik \ref{eq:bui}. 
+Abbildung \ref{fig:uuvsbui} zeigt einen Vergleich von Userbased Collaborative Filtering mit der unpers"onlichen Empfehlungstechnik aus Abschnitt \ref{sec:simple}. Mit den optimierten Parameter erzielt Userbased Collaborative Filtering einen 15\% kleineren MAE als die unpers"onliche Empfehlungstechnik.
 
 Der Algorithmus ist intuitiv und relative einfach zu implementieren. Da er nur zwei Paramter hat ("Ahnlichkeitsmetrik, Nachbarschaftsgr"osse) kann man den Algorithmus einfach einsetzen. 
 
 \section{Matrixfaktorisierung}
 \label{sec:matrixfactorization}
 
-Wie bereit in Abschnitt \ref{sec:cfmodels} erw"ahnt gibt es neben den kNN-Methoden noch sogenannte Latent Factor Modelle. Latent Factor Modelle versuchen die Items und die User zu charakterisieren. 
+Wie bereit in Abschnitt \ref{sec:cfmodels} erw"ahnt gibt es neben den kNN-Methoden noch sogenannte Latent Faktor Modelle. Latent Faktor Modelle versuchen die Items und die User zu charakterisieren. 
 
-Man geht davon aus Users und Items sogenannte Latent Factors haben. Das heisst ein User hat zum Beispiel bestimmte Preferenzen. Diese Preferenzen kann mit einem Vektor repr"asentiert werden. Jedes Element sagt aus, ob dem User eine bestimmte Eigenschaft wichtig ist oder nicht. 
+Man geht davon aus Users und Items sogenannte Latent Faktors haben. Latent Faktor Vektoren repr"asentieren die Pr"aferenzen und Eigenschaften der User und der Items. Jedes Element eine Latent Faktor Vektors sagt aus, ob dem User eine bestimmte Eigenschaft wichtig ist oder nicht oder ob das Item eine bestimmte Eigenschaft hat oder nicht. 
 
 
 \subsection{Intuition}
@@ -753,7 +742,7 @@ Eintr"age. Diese 1,5M Eintr"age m"ussen alle berechnet werden. Wenn man die Inte
 In unserem Beispiel sind das noch
 
 \begin{equation}
-  \label{eq:dimred}
+  \label{eq:dimred1}
   40(1682*943) = 105000
 \end{equation}
 
@@ -829,20 +818,20 @@ In diesem Projekt wurden die Elemente der Latent Faktor Vektoren mit 0.1 initial
 Um das Minimum zu finden, kann beispielsweise das Verfahren Gradientenabstieg angewendet werden. Dazu wird die Kostenfunktion $J$ nach $q_i$ und nach $p_u$ abgeleitet. F"ur $q_i$ lautet die Ableitung:
 
 \begin{equation}
-  \label{eq:decx}
+  \label{eq:decx1}
   \frac{ \partial J }{ \partial q_i } = \sum (q_i^T p_j - r) p_j + \lambda q_i
 \end{equation}
 
 Und f"ur die $p_i$ wird folgendermassen abgeleitet:
 
 \begin{equation}
-  \label{eq:dectheta}
+  \label{eq:dectheta1}
   \frac{ \partial J }{ \partial p_i } = \sum (q_i^T p_j - r) q_j + \lambda p_i
 \end{equation}
 
 Es hat sich herausgestellt, dass das Verfahren des Gradientenabstiegs f"ur eine Ratingmatrix mit den Dimensionen 1682 x 943 nicht skaliert. Sobald man mehrere Iterationen durchf"uhrt, dauert das Verfahren mehrere Stunden. Und wenn man zu wenige Iteration durchf"uhrt, werden die Paramter nicht befriedigend optimiert. Ein Durchlauf mit 10 Iterationen dauerte auf der Evaluationsplattform 44 Minuten und f"uhrte zu einem MAE von 1.0235.
 
-Die Berechnung der partiellen Ableitungen \label{eq:decx} und \label{eq:dectheta} ist aufwendig. F"ur jeden Parameter von $J$ und f"ur jede Dimension der Latent Faktor Vektoren muss "uber das ganze Trainingsset iteriert werden.
+Die Berechnung der partiellen Ableitungen \ref{eq:decx1} und \ref{eq:dectheta1} ist aufwendig. F"ur jeden Parameter von $J$ und f"ur jede Dimension der Latent Faktor Vektoren muss "uber das ganze Trainingsset iteriert werden.
 
 \subsection{Funk's stochastischer Gradientabstieg}
 \label{sec:funksvd}
@@ -979,7 +968,7 @@ Wenn die Latent Faktor Vektoren mit 0.1 initialisiert werden, erreicht die Imple
 
 Die Anzahl Features $f$ bestimmt die Dimension der Latent Faktor Vektoren $q_i$ und $p_u$.
 
-Abbildung \ref{fig:lambda} zeigt die Kreuzvalidierung f"ur den Paramter $f$. Bei dieser Evaluation wurde die Anzahl Iterationen auf 20 gesetzt und $\alpha$ auf 0.15. Regularisierung $\lambda$ ist 0.01.
+Abbildung \ref{fig:lambda1} zeigt die Kreuzvalidierung f"ur den Paramter $f$. Bei dieser Evaluation wurde die Anzahl Iterationen auf 20 gesetzt und $\alpha$ auf 0.15. Regularisierung $\lambda$ ist 0.01.
 
 \begin{figure}
   \centering
@@ -992,7 +981,7 @@ Abbildung \ref{fig:lambda} zeigt die Kreuzvalidierung f"ur den Paramter $f$. Bei
 \addplot table {f.dat};
   \end{axis}
 \end{tikzpicture}
-\label{fig:lambda}
+\label{fig:lambda1}
 \caption{Parameteroptimierung von $f$ mit $\alpha$ = 0.15 20 Iterationen und $\lambda=0.01$}
 \end{figure}
 
