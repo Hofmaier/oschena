@@ -235,3 +235,10 @@ kreuzvalidierung
 N ist unklar
 dimensions reduktion. erwaehen dass es ein besipiel ist.
 fazit und ausblick: mehr schreiben. einordnung der resultate. vergleich mit anderen.
+* sitzung 20.1
+- ist die arbeit genuegend
+- formele sachen. titelblatt, erklaerung dass die arbeit von mir ist (ba), eigenstaendigkeiterklaerung. in anhang
+- cd was muss drauf sein. was ist wichtig.
+- arbeit bei henrik
+- abteilungsabend
+- abstract fuer komm: bild kleiner. bild lesbar. matrixfaktorisation durch matrix faktorisierung.

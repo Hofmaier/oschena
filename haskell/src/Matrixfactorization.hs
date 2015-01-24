@@ -22,8 +22,8 @@ type Rating = (Int, Int, Double)
 type Elem = [Rating]
 
 alpha = 0.01
-lambda = 0.01
-nr_iter = 1
+lambda = 0.1
+nr_iter = 3
 nfeatures = 4
 nusers = 943
 nitems = 1682
@@ -60,7 +60,7 @@ runsgd para ium uirm all d = do
   let sgdArgs = S.sgdArgsDefault { S.iterNum = nr_iter, S.gain0=alpha }
   let uim = uidict all
   let avg = mu all
-  S.sgd sgdArgs (notify all) (negGrad grad) d para 
+  S.sgd sgdArgs (notify all) (grad) d para 
 
 -- | Notification run by the sgdM function every parameters update.
 notify :: [(Int,Int,Double)] -> S.Para -> Int -> IO ()
@@ -74,9 +74,9 @@ grad :: S.Para
 grad para (u,i,r) = S.fromList concatpara
   where concatpara = (qi u i r) ++ (pu u i r)
         qi u i r= qi2 u i (errorui u i para r) 
-        qi2 u i e =  [(indexi i f, (para U.! (indexu u f)) * e - (lambda *(para U.! (indexi i f))) )| f <- frange]
+        qi2 u i e =  [(indexi i f, ((para U.! (indexu u f)) * e) - (lambda *(para U.! (index2 u f))))| f <- frange]
         pu u i r = pu2 u i (errorui u i para r)
-        pu2 u i e =  [(indexi u f, e * (para U.! (indexi i f)) - (lambda*(para U.! (indexu u f)))) | f <- frange]
+        pu2 u i e =  [(indexu u f, ((para U.! (indexi i f)) * e) - (lambda *(para U.! (indexu u f) )))| f <- frange]
 
 -- | calculates error for trainingdata user , item,
 -- rating with a given latent factor vector
@@ -92,13 +92,13 @@ errorui u i para r = r - (sum [(para U.! (indexi i f)) * (para U.! (indexu u f))
 indexi :: Int -- ^ item nr
        -> Int -- ^ feature nr
        -> Int -- ^ Index for paramteter vector
-indexi x f = (x-1) * nfeatures + f
+indexi x f = ((x-1) * nfeatures) + f
 
 -- | Get the index of a featuer of a user in the parametervector
 indexu :: Int -- ^ user nr
        -> Int -- ^ feature nr
        -> Int -- ^ Index for paramteter vector
-indexu x f = nitems + nfeatures * (x-1) + f
+indexu x f = nitems + (nfeatures * (x-1)) + f
 
 -- | cost function. return the squared sum of all error with training set
 goal :: S.Para -> [(Int,Int,Double)] -> Double
