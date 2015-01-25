@@ -111,19 +111,19 @@ Diese Liste nennt man Top-N Empfehlung. Abbildung \ref{fig:cfprocess} zeigt die 
   \label{fig:cfprocess}
 \end{figure}
 
-\subsubsection{N"achste-Nachbarn vs. Latent Faktor Modelle}
+\subsubsection{Speicherbasiert Methoden vs. modellbasiert}
 \label{sec:cfmodels}
 
 Collaborative Filtering kann weiter in zwei unterschiedliche Methoden aufgeteilt werden:
 
 \begin{description}
-\item[N"achste-Nachbarn Methoden] Bei N"achste-Nachbarn Methoden werden f"ur jeden User "ahnliche User gesucht. Es wird eine Nachbarschaft mit "ahnlichen User erstellt. Diese Methoden nennt man auch speicherbasiert (englisch: memory-based).
-"Ahnlichkeit wird aufgrund von gemeinsam bewerteten Item berechnet. Wenn zwei User f"ur mehrere Items die selben Bewertungen vergeben, sind sie sich "ahnlich. Sie haben einen "ahnlichen Geschmack. Einem User werden diejenigen Items empfohlen, die er noch nicht kennt und die eine hohe Bewertung von "ahnlichen Usern erhalten haben.
+\item[Speicherbasiert] Bei speicherbasierten Methoden werden f"ur jeden User "ahnliche User aufgrund der gespeicherten Bewertungen gesucht. Es wird eine Nachbarschaft mit "ahnlichen User erstellt. Diese Methoden nennt man auch N"achste-Nachbarn-Methoden oder kNN-Methoden (englisch: memory-based).
+"Ahnlichkeit wird aufgrund von gemeinsam bewerteten Items berechnet. Wenn zwei User f"ur mehrere Items die selben Bewertungen vergeben, sind sie sich "ahnlich. Sie haben einen "ahnlichen Geschmack. Einem User werden diejenigen Items empfohlen, die er noch nicht kennt und die eine hohe Bewertung von "ahnlichen Usern erhalten haben.
 Wenn das Recommendersystem $p_{u,i}$ berechnen soll, beschafft es sich eine Liste mit allen Usern, die in der Nachbarschaft von $u$ sind und die das Item $i$ bewertet haben. Aufgrund der "Ahnlickeit zu $u$ und den vorhandenen Bewertungen der User in der Liste f"ur $i$, wird $p_{u,i}$ berechnet.
-\item[Latent Faktor Modell] Latent Faktor Modelle repr"asentieren User und Items als Vektoren. Recommendersysteme, die Latent Faktor Modelle verwenden, nennt man modellbasiert (englisch: model-based) Die Elemente sind Pr"aferenzen und Eigenschaften. Diese Vektoren werden aufgrund der vorhandenen Bewertungen berechnet. $p_{u,i}$ wird mit den Latent Faktor Vektoren berechnet. Die Berechnung der Latent Faktor Vektoren kann auf ein Optimierungsproblem reduziert werden.
+\item[Modellbasiert] Modellbasierte Methoden (englisch: model-based) nutzen die bestehenden Bewertungen um ein Modell zu erlernen. Das Modell wird auch Latent Faktor Modell genannt. User und Items werden mit Vektoren repr"asentiert. Die Elemente der Vektoren sind Pr"aferenzen und Eigenschaften.  $p_{u,i}$ wird mit den Latent Faktor Vektoren berechnet. Die Berechnung des Modells kann auf ein Optimierungsproblem reduziert werden.
 \end{description}
 
-Dieser Report beschreibt Algorithmen f"ur beide Methoden. Userbased ist eine N"achste-Nachbarn Methode. Matrixfaktorisierung nutzt ein Latent Faktor Modell.
+Dieser Report beschreibt Algorithmen f"ur beide Methoden. Userbased ist speicherbasiert. Matrixfaktorisierung ist modellbasiert.
 
 \subsection{Herausforderungen}
 \label{sec:challenges}
@@ -586,7 +586,7 @@ Der Vergleich der "Ahnlichkeitsmetriken zeigt, dass der optimierten Korrelations
 \label{fig:predicteq}
 \end{figure}
 
-Eine unbekannte Bewertung kann auf mehrere Arten berechnet werden. In Abschnitt \ref{sec:predict} wurden die Formeln \ref{eq:computeprediction} und \ref{eq:optcomputeprediction} zur Berechnung  von $p_{u,i}$ beschrieben. Bei der ersten Variante wird das Produkt von "Ahnlichkeit und Bewertung berechnet. Bei der zweiten Variante nur das Produkt zwischen Abweichung und "Ahnlichkeit. Beide Formeln wurden mit den Testdaten evaluiert. Wie in Abbildung \ref{fig:predicteq} ersichtlich hat diese "Anderung der Berechnung einen starken Einfluss auf den MAE. Die Messungen wurden mit einer Nachbarschaftsgr"osse von 20 und dem Pearson Korrelationskoeffizienten durchgef"uhrt.
+Eine unbekannte Bewertung kann auf mehrere Arten berechnet werden. In Abschnitt \ref{sec:predict} wurden die Formeln \ref{eq:computeprediction} und \ref{eq:optcomputeprediction} zur Berechnung  von $p_{u,i}$ beschrieben. Beide Formeln wurden mit den Testdaten evaluiert. Wie in Abbildung \ref{fig:predicteq} ersichtlich hat diese "Anderung der Berechnung einen starken Einfluss auf den MAE. Die Messungen wurden mit einer Nachbarschaftsgr"osse von 20 und dem Pearson Korrelationskoeffizienten durchgef"uhrt.
 
 
 \subsubsection{Gr"osse der Nachbarschaft}
@@ -620,12 +620,12 @@ Abbildung \ref{fig:nrofneighbors1} zeigt den Mean Absolute Error in Abh"angigkei
   \begin{axis}[
     xbar, xmin=0.6,
     height=4.5cm, width=12cm, enlarge y limits=0.5,
-    symbolic y coords = {Userbased CF,$b_{ui}$},
+    symbolic y coords = {Userbased CF,unpersoenlich},
     xlabel={MeanAbsoluteError},
     ytick = data,
     nodes near coords, nodes near coords align={horizontal},
     ]
-    \addplot coordinates {(0.66,Userbased CF) (0.861,$b_{ui}$)};
+    \addplot coordinates {(0.66,Userbased CF) (0.7681,unpersoenlich)};
   \end{axis}
 \end{tikzpicture}
 
@@ -642,10 +642,9 @@ Der Algorithmus ist intuitiv und relative einfach zu implementieren. Da er nur z
 \section{Matrixfaktorisierung}
 \label{sec:matrixfactorization}
 
-Wie bereit in Abschnitt \ref{sec:cfmodels} erw"ahnt gibt es neben den kNN-Methoden noch sogenannte Latent Faktor Modelle. Latent Faktor Modelle versuchen die Items und die User zu charakterisieren. 
+Wie bereit in Abschnitt \ref{sec:cfmodels} erw"ahnt gibt es neben den speicherbasierten Methoden noch modellbasierte Methoden. Latent Faktor Modelle versuchen die Items und die User zu charakterisieren. 
 
-Man geht davon aus Users und Items sogenannte Latent Faktors haben. Latent Faktor Vektoren repr"asentieren die Pr"aferenzen und Eigenschaften der User und der Items. Jedes Element eine Latent Faktor Vektors sagt aus, ob dem User eine bestimmte Eigenschaft wichtig ist oder nicht oder ob das Item eine bestimmte Eigenschaft hat oder nicht. 
-
+Man geht davon aus Users und Items sogenannte Latent Faktors haben. Latent Faktor Vektoren repr"asentieren die Pr"aferenzen und Eigenschaften der User und der Items. Jedes Element eines Latent Faktor Vektors sagt aus, ob dem User eine bestimmte Eigenschaft wichtig ist oder nicht oder ob das Item eine bestimmte Eigenschaft hat oder nicht. 
 
 \subsection{Intuition}
 \label{sec:intuition}
@@ -664,11 +663,9 @@ Ein User der Action mag aber keine Romanze k"onnte zum Beispiel durch folgenden 
 
 Die 5 repr"asentiert Action und die 1 repr"asentiert die den Romantik Preferenz.
 
- Ein Film kann ebenfalls nach den selben Dimensionen bewertet werden. Ein Vektor kann beschreiben wie actiongeladen oder wie romantisch ein Film ist. Die Bewertung ist das Skalarprodukt der Preferenzen des Users und den Eigenschaften des Items. Das heisst die Bewertung ist maximal, wenn die Latent Factor Vektoren von User $p_u$ und Item $p_i$ "ubereinstimmen.
+ Ein Film kann ebenfalls nach den selben Dimensionen bewertet werden. Ein Vektor kann beschreiben wie actiongeladen oder wie romantisch ein Film ist. Die Bewertung ist das Skalarprodukt der Pr"aferenzen des Users und den Eigenschaften des Items. Das heisst die Bewertung ist maximal, wenn die Latent Faktor Vektoren von User $p_u$ und Item $p_i$ "ubereinstimmen.
 
-Beim Latent Factor Ansatz ist es nicht relevant, welche Bedeutung die Elemente in den Featurevektoren haben. Es geht nur darum die Muster zu finden. Matrixfaktorierung generiert Vektoren f"ur Eigenschaften, die wir gar nicht interpretieren k"onnen.
-
-Abbildung \ref{fig:moviedimension} veranschaulicht die Idee. In Abbildung \ref{fig:moviedimension} werden Filme als Objekte in einem Diagramm mit zwei Dimensionen dargestellt. In diesem Beispiel sind es die Dimensionen Action und Romantik. Die Eigenschaften werden als Zahlen von 0 bis 1 ausgedr"uckt. Rambo 4 ist beispielweise ein Film, der durch keine Romantik und viel Action charakterisiert wrden kann.
+Beim Latent Faktor Ansatz ist es nicht relevant, welche Bedeutung die Elemente in den Featurevektoren haben. Es geht nur darum die Muster zu finden. Matrixfaktorisierung berechnet Vektoren f"ur Eigenschaften, die wir gar nicht interpretieren k"onnen.
 
 \begin{figure}
 \centering
@@ -691,14 +688,16 @@ coordinates {
 };
 \end{axis}
 \end{tikzpicture}
+\caption{Filme k"onnen durch Vektoren repr"asentiert werden. In diesem Modell besteht ein Film aus den Eigenschaften Action und Romantik}
 \label{fig:moviedimension}
 \end{figure}
 
+Abbildung \ref{fig:moviedimension} veranschaulicht die Idee. In Abbildung \ref{fig:moviedimension} werden Filme als Objekte in einem Diagramm mit zwei Dimensionen dargestellt. In diesem Beispiel sind es die Dimensionen Action und Romantik. Die Eigenschaften werden als Zahlen von 0 bis 1 ausgedr"uckt. Rambo 4 ist beispielweise ein Film, der durch keine Romantik und viel Action charakterisiert werden kann.
 
-\subsection{Matrixfaktorisierung Model}
+\subsection{Matrixfaktorisierung Modell}
 \label{sec:matrixfactorizationmodel}
 
-Das Model der Matrixfaktorisierung weist jedem User und jedem Item einen Latent Factor Vektor der L"ange $f$ zu. Jedes Item kann durch einen Vektor $q_i \in \mathbb{R}^f$ repr"asentiert werden und jeder User kann durch einen Vektor $p_u \in \mathbb{R}^f$ repr"asentiert werden. Wenn man die Bewertung von Item $i$ f"ur User $u$ absch"atzen m"ochte, kann man das Vektorprodukt von $q_i$ und $p_u$ berechnen.
+Jedes Item kann durch einen Vektor $q_i \in \mathbb{R}^f$ repr"asentiert werden und jeder User kann durch einen Vektor $p_u \in \mathbb{R}^f$ repr"asentiert werden. $f$ entspricht der Anzahl Eigenschaften. Wenn man die Bewertung von Item $i$ f"ur User $u$ absch"atzen m"ochte, kann man das Vektorprodukt von $q_i$ und $p_u$ berechnen.
 
 \begin{equation}
   \label{eq:rui}
@@ -715,10 +714,10 @@ rui:: Vector -> Vector -> Double
 rui qi pu = vdot qi pu
 \end{lstlisting}
 
-\subsection{Dimensions Reduktion}
+\subsubsection{Dimensions Reduktion}
 \label{sec:dimred}
 
-Repr"asentiert man die User-Item Interaktion mit der Ratingmatix ben"otigt man 
+Repr"asentiert man alle m"oglichen User-Item Interaktion mit der Ratingmatix ben"otigt viel Speicher
 
 \begin{equation}
   \label{eq:dimre1}
@@ -732,7 +731,7 @@ Mit dem Movielens Datenset entspricht das
   1682 * 943 = 1586126
 \end{equation}
 
-Eintr"age. Diese 1,5M Eintr"age m"ussen alle berechnet werden. Wenn man die Interaktion zwischen User und Item mit Latent Factor Vektoren mit 40 Faktoren repr"asentiert ben"otigt man 
+Eintr"age. Wenn man die Interaktionen durch die Latent Faktor Vektoren mit 40 Faktoren repr"asentiert ben"otigt weniger Speicher. 
 
 \begin{equation}
   \label{eq:dimred}
@@ -751,52 +750,54 @@ Eintr"age. Das sind mehr als 15-mal weniger. Mit den Latent Faktor Vektoren kann
 \subsection{Optimierungsproblem}
 \label{sec:optim}
 
-Bei Matrixfaktorisierung geht es darum, die Latent Factor Vektoren $q_i$ und $p_u$ f"ur jedes Item und jeden User abzusch"atzen. Sobald eine gute Absch"atzung der Latent Factor Vektoren vorliegt, kann mit Hifle von Gleichung \ref{eq:rui} eine Vorhersage der Bewertung eines Users f"ur ein Item berechnen werden. Das Recommenderproblem wird auf das Optimierungsproblem, geeignete  $q_i$ und $p_u$ Vektoren zu finden, reduziert
+Das Recommenderproblem kann auf ein Optimierungsproblem reduziert werden.
 
-Die Latent Faktor Vektoren $q_i$ und $p_u$ k"onnen mit Hilfe der vorhandenen Bewertungen approximiert werden. Sie werden also von den Trainingsdaten abgeleitet. Mit den vorhandenen Bewertungen kann man berechnen, wie gut die angenommenen Latent Factor Vektoren sind. F"ur eine vorhandene Bewertung $r_{ui}$ berechnet man den Fehler $e_{ui}$ wie folgt:
+Bei Matrixfaktorisierung geht es darum, die Latent Faktor Vektoren $q_i$ und $p_u$ f"ur jedes Item und jeden User abzusch"atzen. Sobald eine gute Absch"atzung der  Vektoren vorliegt, kann mit Hifle von Gleichung \ref{eq:rui} eine Vorhersage $ \hat{r_{ui}}$ der Bewertung eines Users $u$ f"ur ein Item $i$ berechnen werden. 
+
+Die Vektoren $q_i$ und $p_u$ werden mit Hilfe des Trainingsset erlernt werden. 
+
+F"ur eine vorhandene Bewertung $r_{ui}$ kann die Differenz zur Vorhersage $\hat{r_{ui}}$ wie folgt berechnet werden.
 
 \begin{equation}
   \label{eq:error}
   e_{ui} = r_{ui} - q_i^T p_u
 \end{equation}
 
-$r_{ui}$ ist eine Zahl von 1 bis 5, die die Bewertung von User $u$ f"ur Item $i$ repr"asentiert. $e_{ui}$ nennt man auch die Residuen.
+$r_{ui}$ ist die tats"achliche Bewertung von User $u$ f"ur Item $i$. 
+$e_{ui}$ nennt man Residuum.
 
-Ziel des Recommendersystems ist es $q_i \in \mathbb{R}^f$ und $p_u \in \mathbb{R}^f$ so zu w"ahlen, dass die Summe aller Fehler $e_{ui}$ minimal wird. Die Berechnung der Gleichung \ref{eq:error} f"uhrt man f"ur alle gegebenen Bewertungen durch und berechnet die Summe der Residuen.
+Ziel des Recommendersystems ist, es $q_i \in \mathbb{R}^f$ und $p_u \in \mathbb{R}^f$ so zu w"ahlen, dass die Summe aller Fehler $e_{ui}$ minimal wird. Die Berechnung der Gleichung \ref{eq:error} f"uhrt man f"ur alle Bewertungen im Trainingsset durch und berechnet die Summe der Residuen.
 
 \begin{equation}
 \label{eq:errorsum}
   \sum_{(u,i) \in \kappa} (r_{ui} - q_i^T p_u)
 \end{equation}
 
-$\kappa$ ist die Menge aller $(u,i)$-Paare f"ur eine explizite Bewertung gemacht wurde. Diese Menge entspricht dem Trainingset.
+$\kappa$ entspricht dem Trainingsset.
 
-Wenn man Vektoren $q_i$ und $p_u$ findet, bei denn die Summe in Formel \ref{eq:errorsum} minimal, st hat man eine Absch"atzung der Eigenschaften aller Users und Items. Bei der Methode Matrixfaktorierung geht es also darum folgendes Optimierungsproblem zu l"osen.
-
+Formell ausgedr"uckt lautet das Optimierungsproblem 
 \begin{equation}
   \min_{q*,p*} \sum_{(u,i) \in \kappa} (r_{ui} - q_i^T p_u)
   \label{eq:objective1}
 \end{equation}
-
- Die Bewertungen k"onnen als Item-User Matrix dargestellt werden. In dieser Matrix sind die meisten Zellen leer, da es nicht zu allen Item User Kombinationen Bewertungen gibt. 
-
+.
 
 \subsubsection{Regularisierung}
 \label{sec:regularization}
 
-Wenn man Gleichung \ref{eq:objective1} minimiert, werden $q_i$ und $p_u$ so gew"ahlt, dass der Fehler f"ur das Trainingsset minimiert wird. Das ist aber nicht gew"unschte Verhalten. Man m"ochte die Featurevektoren mit dem Trainingsset berechnen und sie sp"ater auf ein unbekanntes Set anwenden. Die Gleichung \ref{eq:objective1} bestimmt Parameter, die sich auf das Trainingsset spezialisieren. Die Optimierung soll also generalisiert werden.
+Wenn man Gleichung \ref{eq:objective1} minimiert, werden $q_i$ und $p_u$ so gew"ahlt, dass der Fehler f"ur das Trainingsset minimiert wird. Das ist aber nicht gew"unschte Verhalten. Man m"ochte die Vektoren mit dem Trainingsset berechnen und sie sp"ater auf ein unbekanntes Set anwenden. Die Gleichung \ref{eq:objective1} bestimmt Parameter, die sich auf das Trainingsset spezialisieren. Die Optimierung soll also generalisiert werden.
 
- Dieses Verhalten wird mit einem Regularisierungterm erreicht. Der Regularisierungsterm f"uhrt dazu, dass die Elemente von $q_i$ und $p_u$ nicht zu gross werden. Die Konstante $\lambda$ kontrolliert wie stark die Gleichung \ref{eq:objective} regularisiert wird \cite{koren2009}.
+ Dieses Verhalten wird mit einem Regularisierungterm erreicht. Der Regularisierungsterm f"uhrt dazu, dass die Elemente von $q_i$ und $p_u$ nicht zu gross werden. Die Konstante $\lambda$ kontrolliert wie stark die Gleichung \ref{eq:objective1} regularisiert wird \cite{koren2009}. Das Optimierungsproblem mit Regularisierung lautet wie folgt:
 
 \begin{equation}
   \label{eq:optimization}
-    r_{ui} - q_i^T p_u + \lambda (\lVert q \rVert^2 + \lVert p \lVert ^2)
+      \min_{q*,p*} \sum_{(u,i) \in \kappa} (r_{ui} - q_i^T p_u) + \lambda (\lVert q \rVert^2 + \lVert p \lVert ^2)
 \end{equation}
 
 \subsubsection{Kostenfunktion}
 \label{sec:opt}
 
-Aus der Gleichung \ref{eq:optimization} kann man eine sogenannte Kostenfunktion oder Objectivefunction herleiten. Die Optimierungsverfahren ben"otigen eine Kostenfunktion $J$. Diese Funktion soll die Latent Faktor Vektoren $q_i$ und $p_u$ als Argument nehmen und die Summe der Residuen zur"uckgeben. Umso kleiner diese Summe ist, umso besser sind die Parameter gew"ahlt. Die Kostenfunktion sieht folgendermassen aus:
+Aus der Gleichung \ref{eq:optimization} kann man eine sogenannte Kostenfunktion herleiten. Die Optimierungsverfahren ben"otigen eine Kostenfunktion $J$. Diese Funktion soll die Latent Faktor Vektoren $q_i$ und $p_u$ als Argument nehmen und die Summe der Residuen zur"uckgeben. Umso kleiner diese Summe ist, umso besser sind die Parameter gew"ahlt. Die Kostenfunktion sieht folgendermassen aus:
 
 \begin{equation}
   \label{eq:costfunction}
@@ -815,7 +816,7 @@ In diesem Projekt wurden die Elemente der Latent Faktor Vektoren mit 0.1 initial
 \subsubsection{Einfacher Gradientenabstieg}
 \label{sec:gradientdescent}
  
-Um das Minimum zu finden, kann beispielsweise das Verfahren Gradientenabstieg angewendet werden. Dazu wird die Kostenfunktion $J$ nach $q_i$ und nach $p_u$ abgeleitet. F"ur $q_i$ lautet die Ableitung:
+Um das Minimum zu finden, kann beispielsweise das Verfahren des Gradientenabstieg angewendet werden. Dazu wird die Kostenfunktion $J$ nach $q_i$ und nach $p_u$ abgeleitet. F"ur $q_i$ lautet die Ableitung:
 
 \begin{equation}
   \label{eq:decx1}
@@ -829,7 +830,7 @@ Und f"ur die $p_i$ wird folgendermassen abgeleitet:
   \frac{ \partial J }{ \partial p_i } = \sum (q_i^T p_j - r) q_j + \lambda p_i
 \end{equation}
 
-Es hat sich herausgestellt, dass das Verfahren des Gradientenabstiegs f"ur eine Ratingmatrix mit den Dimensionen 1682 x 943 nicht skaliert. Sobald man mehrere Iterationen durchf"uhrt, dauert das Verfahren mehrere Stunden. Und wenn man zu wenige Iteration durchf"uhrt, werden die Paramter nicht befriedigend optimiert. Ein Durchlauf mit 10 Iterationen dauerte auf der Evaluationsplattform 44 Minuten und f"uhrte zu einem MAE von 1.0235.
+Es hat sich herausgestellt, dass das Erlernen des Modell mit dem Verfahren des Gradientenabstiegs f"ur eine Ratingmatrix mit den Dimensionen 1682 x 943 zu aufw"andig ist. Sobald man mehrere Iterationen durchf"uhrt, dauert das Verfahren mehrere Stunden. Und wenn man zu wenige Iteration durchf"uhrt, werden die Parameter nicht befriedigend optimiert. Ein Durchlauf mit 10 Iterationen dauert auf der Evaluationsplattform 44 Minuten und f"uhrte zu einem MAE von 1.0235.
 
 Die Berechnung der partiellen Ableitungen \ref{eq:decx1} und \ref{eq:dectheta1} ist aufwendig. F"ur jeden Parameter von $J$ und f"ur jede Dimension der Latent Faktor Vektoren muss "uber das ganze Trainingsset iteriert werden.
 
@@ -838,15 +839,9 @@ Die Berechnung der partiellen Ableitungen \ref{eq:decx1} und \ref{eq:dectheta1} 
 
 Statt des einfachen Gradient Descent wurde eine Variante der Gradient Descent Methode implementiert. Die Methode wurde von Simon Funk beschrieben \cite{funk}. Die Implementation basiert auf dieser Beschreibung.
 
-Funk's Stochastischer Gradientenabstieg iteriert durch alle User-Item Paare des Trainingsets. Mit den initialen Latent Factor Vektoren $q_i$ und $p_u$ wird f"ur jede Bewertung im Trainingset der Fehler berechnet. Es ist einfach die Item-User Paare des Trainingsets abzufragen. Listing \ref{lst:trainingcases} zeigt die Implementation.
+Bei dem stochastischer Gradientenabstieg von Simon Funk (nachfolgend Funk SGD) ist die Berechnung des Gradienten weniger aufw"andig als beim einfachen Gradientenabstieg aus Abschnitt \ref{sec:gradientdescent}.
 
-\begin{lstlisting}[caption=Abfrage des Trainingsets,label=lst:trainingcases]
-import qualified Data.Matrix as M  
-trainingcases :: M.Matrix Double -> [(Int, Int)]
-trainingcases y = [(x2, x1) | x1 <- [1..(M.ncols y)], 
-         x2 <- [1..(M.nrows y)],
-         (M.getElem x2 x1 y) /= 0.0 ]
-\end{lstlisting}
+Der Fehler $e_{ui}$ f"ur eine Bewertung aus dem Trainingsset und f"ur die Parameter $q_i$ und $p_u$ berechnet sich wie folgt:
 
 \begin{equation}
   \label{eq:error1}
@@ -865,7 +860,7 @@ Wenn man diese Gleichungen partiell nach $q_i$ und $p_u$ ableitet, erh"alt man f
     (r_{ui} - q_i^T p_u) * q_i =  e_{ui} * q_i
 \end{equation}
 
-Bei der Methode des stochastischen Gradientenabstiegs passt man jeden Parameter in der Richtung des Fehlers an. Die Richtungen der Fehler sind die Ableitungen aus Gleichung \ref{eq:devqi} und \ref{eq:devpu}. Die Parameter werden also wie folgt angepasst:
+Bei der Methode Funk SGD passt man jeden Parameter in entgegengesetzter Richtung der Ableitung an. So wird der Fehler minimiert. Die Parameter werden also wie folgt angepasst:
 
 \begin{equation}
   \label{eq:assignpi}
@@ -881,9 +876,7 @@ und
 
 $\alpha$ ist eine Konstante. Sie bestimmt mit welcher Schrittweite die Paramter angepasst werden. In Abschnitt \label{sec:results} wird die Optimierung von $\alpha$ beschrieben.
 
-W"ahrend einer Iteration werden die beiden Zuweisungen \ref{eq:assignpi} und \ref{eq:assignqu} durchgef"uhrt. Bei jeder Iteration wird $e_{ui}$ neu berechnet. Da bei einer Zuweisung werden $q_i$ und $p_u$ zur Berechnung verwendet. Die Latent Faktor Vektoren der User und die Latent Faktor Vektoren der Items sind also miteinander gekoppelt und voneinander abh"angig.
-
-Im Gegensatz zum Optmierungsverfahren des einfachen Gradientenabstiegs aus Abschnitt \ref{sec:gradientdescent} muss bei einer Iteration nicht durch das gesamte Trainingsset iteriert werden. Dadurch kann die Optimierung schneller ausgef"uhrt werden.
+Diese Aktualisierung wird f"ur alle Bewertungen im Trainingsset durchgef"uhrt. Die Aktualisierung f"ur alle Bewertungen im Trainingsset entspricht einer Iteration.
 
 \subsubsection{Regularisierung}
 \label{sec:regularization2}
@@ -905,7 +898,7 @@ $\lambda$ ist eine Konstante. Sie steuert die Regularisierung.
 \subsubsection{Implementation}
 \label{sec:sgdimpl}
 
-Die Berechnung eines einzelnen Featurevektors kann in Haskell einfach implementiert werden. Listing \ref{lst:step} zeigt die Implementation. Das Modul \verb|Data.Vector| stellt den Typ \verb|Vector| zur Verf"ugung. Dieser implementiert die Operationen \verb|(Num a => a -> Vector a -> Vector a| und \verb|(+)::(Num a) => Vector a -> Vector a|.
+Listing \ref{lst:step} zeigt die Implementation der Berechnung bei jedem Aktualisierungsschritt in Haskell.
 
 \begin{lstlisting}[caption=Berechnung eines Featurevektors, label={lst:step}]
 import Data.Vector 
@@ -916,7 +909,7 @@ newqi :: Vector Double
 newqi qi pu e = qi + alpha (e * pu - (lambda * pi))
 \end{lstlisting}
 
-Da die Datenstrukturen in Haskell immutable sind, k"onnen die Latent Faktor Vektoren $q_i$ und $p_u$ beim Updateschritt nicht einfach durch die neuen Werte ausgetauscht werden. Die Datenstruktur, die die Vektoren zusammenfasst, muss bei jedem Updateschritt neu erstellt werden. Dieser Umstand hat bei den ersten Implementation zur Lauftzeit oft eine Out-of-Memory-Exception ausgel"ost. Das Problem konnte behoben werden, indem Maps statt Matrizen eingesetzt werden. Die Maps werden bei jeder Iteration neu aufgebaut. Das heisst, es werden keine Update auf die Datenstruktur ausgef"uhrt sondern nur Inserts. Diese k"onnen in O(log n) ausgef"uhrt werden und ein Teil alten Datenstruktur kann wiederverwendet werden.
+Da die Datenstrukturen in Haskell immutable sind, k"onnen die Vektoren $q_i$ und $p_u$ beim Aktualiserungsschritt nicht einfach durch die neuen Werte ausgetauscht werden. Die Datenstruktur, die die Vektoren zusammenfasst, muss bei jedem Updateschritt neu erstellt werden. Dieser Umstand hat bei den ersten Implementation zur Lauftzeit oft eine Out-of-Memory-Exception ausgel"ost. Das Problem kann behoben werden, indem Maps als Datenstrukturen eingesetzt werden. Die Maps werden bei jeder Iteration neu aufgebaut. Das heisst, es werden keine Updates auf die Datenstruktur ausgef"uhrt sondern nur Inserts. Diese k"onnen in O(log n) ausgef"uhrt werden und ein Teil alten Datenstruktur kann wiederverwendet werden. Listing \ref{lst:sgd} zeigt die Implementation eines Aktualisierungsschitt.
 
 \begin{lstlisting}[caption=Implementation Funk SGD, label=lst:sgd] 
 train :: Features
@@ -934,9 +927,9 @@ train (x, theta) (i, u) y
 
 \subsection{Resultate}
 \label{sec:matrixfactorresults}
-In diesem Abschnitt wird die Optimierung der Parameter der Matrixfaktorisierung durch Kreuzvalidierung beschrieben und es werden die Resultate der Evaluierung der Matrixfaktorisierungsmethode pr"asentiert. 
 
-Matrixfaktorisierung dem stochastischen Gradiendenabgieg-Optmierungsverfahren  nimmt vier Parameter.
+Das Verfahren Matrixfaktorisierung mit Hilfe der Funk SGD Methode nimmt vier Parameter.
+
 \begin{itemize}
 \item Anzahl Iterationen
 \item Anzahl der Features $f$ der Latent Faktor Vektoren
@@ -944,11 +937,13 @@ Matrixfaktorisierung dem stochastischen Gradiendenabgieg-Optmierungsverfahren  n
 \item Regularisierungskonstante $\lambda$
 \end{itemize}
 
+Mithilfe der Evaluation k"onnen experimentell diejenigen Parameter gefunden werden, die zum geringsten MAE f"uhren. In diesem Abschnitt werden die Resultate der Experimente pr"asentiert. 
+
 F"ur jeden Parameter wurde ein Experiment durchgef"uhrt.
 
 \subsubsection{Anzahl Iterationen}
 
-Wenn die Latent Faktor Vektoren mit 0.1 initialisiert werden, erreicht die Implementation bei 200 Interationen einen MAE von 0.797495. Der MAE verbessert sich nach 200 Iterationen nur noch wenig.
+Wenn die Latent Faktor Vektoren mit 0.1 initialisiert werden, erreicht die Implementation bei 200 Interationen einen MAE von 0.7544. Der MAE verbessert sich nach 200 Iterationen nur noch wenig.
 
 \begin{figure}
   \centering
@@ -960,15 +955,15 @@ Wenn die Latent Faktor Vektoren mit 0.1 initialisiert werden, erreicht die Imple
 \addplot table {it.dat};
   \end{axis}
 \end{tikzpicture}
-\caption{MAE in Abh"angigkeit der Anzahl Operationen mit $\alpha$ = 0.15, $f$ = 5, und $\lambda=0.01$}
+\caption{Wert der Kostenfunktion $J$ in Abh"angigkeit der Anzahl Iterationen mit $\alpha$ = 0.15, $f$ = 5, und $\lambda=0.01$}
+\label{fig:itercostj}
 \end{figure}
 
+Abbildung \ref{fig:itercostj} zeigt den Wert der Kostenfunktion $J$ in Abh"angigkeit der Anzahl Iterationen. Der Wert der Kostenfunktion ist proportional zum MAE.
 
-\subsubsection{Anzahl Features}
+\subsubsection{Anzahl Features $f$}p
 
-Die Anzahl Features $f$ bestimmt die Dimension der Latent Faktor Vektoren $q_i$ und $p_u$.
-
-Abbildung \ref{fig:lambda1} zeigt die Kreuzvalidierung f"ur den Paramter $f$. Bei dieser Evaluation wurde die Anzahl Iterationen auf 20 gesetzt und $\alpha$ auf 0.15. Regularisierung $\lambda$ ist 0.01.
+Die Anzahl Features $f$ bestimmt die Dimension der Vektoren $q_i$ und $p_u$.
 
 \begin{figure}
   \centering
@@ -981,74 +976,79 @@ Abbildung \ref{fig:lambda1} zeigt die Kreuzvalidierung f"ur den Paramter $f$. Be
 \addplot table {f.dat};
   \end{axis}
 \end{tikzpicture}
-\label{fig:lambda1}
-\caption{Parameteroptimierung von $f$ mit $\alpha$ = 0.15 20 Iterationen und $\lambda=0.01$}
+\caption{Sensitivit"at von $f$ mit $\alpha$ = 0.15 20 Iterationen und $\lambda=0.01$}
+\label{fig:sensf}
 \end{figure}
 
-Bei dem gegebenen Datenset haben Latent Faktor Vektoren mit einer Dimension von 5 am besten funktioniert.
+Abbildung \ref{fig:sensf} zeigt den MAE in Abh"angigkeit von $f$. Bei dieser Evaluation wurde die Anzahl Iterationen auf 20 gesetzt und $\alpha$ auf 0.15. Die Regularisierungskonstante $\lambda$ ist 0.01.
 
-\subsubsection{Regularisierungskonstante $\lambda$}
+Bei dem gegebenen Datenset hat eine Dimension $f$ von 5 zum kleinsten MAE bei der Evaluation gef"uhrt.
 
 \begin{figure}
   \centering
 \begin{tikzpicture}
   \begin{axis}[
     title=Sensitiv"at von $\lambda$,
-    xlabel=$lambda$,
+    xlabel=$\lambda$,
     ylabel=MAE,
 ]
 \addplot table {lambda.data};
   \end{axis}
 \end{tikzpicture}
+\caption{Sensitivit"at von $\lambda$ mit $\alpha$ = 0.15 20 Iterationen und $f = 5$}
 \label{fig:lambda}
-\caption{Kreuzvaliderierung von $\lambda$ mit $\alpha$ = 0.15 20 Iterationen und $f = 5$}
 \end{figure}
 
+\subsubsection{Regularisierungskonstante $\lambda$}
 
+Abbildung \ref{fig:lambda} zeigt den MAE in Abh"angigkeit von der Regularisierungskonstante $\lambda$. Wenn $\lambda$ 0.01 ist, ist der MAE am kleinsten.
+
+\subsubsection{Fazit}
+
+Folgende Parameter haben f"ur das MovieLens Datenset zum kleinsten MAE bei der Evaluation gef"uhrt.
 
 \begin{center}
 \begin{tabular}{lr}
  Parameter           &  Wert  \\
- Lambda              &  0.02  \\
- Anzahl Iterationen  &    20  \\
- Alpha               &  0.01  \\
+ $\lambda$              &  0.02  \\
+ Anzahl Iterationen  &    200  \\
+ $alpha$             &  0.15 \\
 \end{tabular}
 \end{center}
-
-Abbildung \ref{fig:compare} zeigt einen Vergleich der verschiedenen Recommender Techniken, $b_{ui}$, Userbase Collaborative Filtering und Matrixfaktorisierung.
 
 \begin{figure}
 \begin{tikzpicture}
   \begin{axis}[
     xbar, xmin=0,
-    width=12cm, enlarge y limits=0.5,
-    symbolic y coords = {$b_{ui}$,Userbased,Matrixfaktorisierung},
+    width=12cm,height=6cm, enlarge y limits=0.5,
+    symbolic y coords = {Bias,Userbased,Matrixfaktorisierung},
     xlabel={MeanAbsoluteError},
     ytick = data,
     nodes near coords, nodes near coords align={horizontal},
     ]
-    \addplot coordinates {(0.87,$b_{ui}$) (0.84,Userbased) (0.76,Matrixfaktorisierung)};
+    \addplot coordinates {(0.7681,Bias) (0.66,Userbased) (0.7544,Matrixfaktorisierung)};
   \end{axis}
 \end{tikzpicture}
 \centering
+\caption{Vergleich von unpers"onlichen Empfehlungen, Userbased Collaborative Filtering und Matrixfaktorisierung}
 \label{fig:compare}
-\caption{}
 \end{figure}
 
-Aus der Abbildung ist ersichtlich, dass der Fehler des Recommender bei Matrixfaktorisierung am geringsten ist.
+Abbildung \ref{fig:compare} zeigt einen Vergleich der vorgestellten Algorithmen. Bias bezeichnet die unpers"onliche Empfehlungstechnik.
 
 \section{Implementationsdetails}
 \label{sec:ram}
 
 Dieser Abschnitt beschreibt Probleme die bei der Implementation aufgetreten sind und m"ogliche L"osungen.
 
-F"ur den Vergleich der beiden Algorithmen Userbased Collaborative Filtering und Matrixfaktorisierung wurden zwei Module geschrieben. Um die Empfehlungen zu Evaluieren wurde ein ausf"uhrbares Programm erstellt. Das ausf"uhrbare Programm liest die Trainingsdaten und Testdaten, erstellt ein Model und berechnet den Mean Absolute Error und schreibt diese auf den Standardoutput.
-
+F"ur den Vergleich der beschriebenen Algorithmen wurden drei Haskell-Module geschrieben. Um die Algorithmen zu Evaluieren wurde ein ausf"uhrbares Programm erstellt. Das ausf"uhrbare Programm liest die Trainingsdaten und Testdaten, erstellt ein Modell und berechnet den Mean Absolute Error und gibt diesen aus.
 
 \subsection{Projekstruktur}
 \label{sec:structur}
 
-F"ur dieses Projekt wurden in ein ausf"uhrbares Programm und mehrere Module aufgeteilt. Abbildung \ref{fig:structur} zeigt die Aufteilung.
+Das Haskell Projekt besteht aus vier Modulen. Abbildung \ref{fig:structur} zeigt die Aufteilung. Die Algorithmen wurden in den Modulen Bias, Userbased und Matrixfactorization implementiert. Diese Module stellen die beiden Funktionen \verb|predict| und \verb|model| zur Verf"ugung.
+
+Die Funktion \verb|model| berechnet das Modell. Dieses wird an die Funktion \verb|predict| weitergegeben. \verb|predict| nimmt ausserdem einen User und ein Item als Argument und gibt als Wert Vorhersage $p_{u,i}$ der Bewertung zur"uck.
 
 \begin{figure}
   \centering
@@ -1058,16 +1058,16 @@ F"ur dieses Projekt wurden in ein ausf"uhrbares Programm und mehrere Module aufg
 \end{figure}
 
 \begin{description}
-\item[evaluaterecommender] Dieses Modul enth"alt das ausf"uhrbare Programm. Es nutzt die Module Userbased und Matrixfactorisation um die Evaluation durchzuf"uhren. Der Programmcode f"ur die MAE Berechnung ist ebenfalls in diesem Modul enthalten.
-\item[Userbased] Das Modul Userbased enth"alt den User based Collaborative Filtering Recommender und die unpers"onlichen Algorithmen. Das Modul stellt die Funktion \verb|predict| und \verb|model| zur Verf"ugung
+\item[evaluaterecommender] Dieses Modul enth"alt das ausf"uhrbare Programm. Es nutzt die Module Userbased, Matrixfactorisation und Bias um die Evaluation durchzuf"uhren. Der Programmcode f"ur die MAE Berechnung ist ebenfalls in diesem Modul enthalten.
+\item[Userbased] Das Modul Userbased enth"alt den Userbased Collaborative Filtering Recommender.
 \item[Matrixfactorization] Das Modul enth"alt einen Recommender der Matrixfaktorisierung nutzt.
-\item[FunkSVD] Der Optimierungalgorithmus von Simon Funk ist in diesem Modul implementiert.
+\item[Bias] Das Modul Bias implementiert die unpers"onlichen Empfehlungstechniken.
 \end{description}
 
 \subsection{Build System}
 \label{sec:cabal}
 
-Um das Projekt zu kompilieren und die Abh"angikeiten aufzul"osen, wurde das Buildtool Cabal eingesesetzt. Die verwendete Version ist 1.20.0.2. Cabal ein Paketisierung und Build System f"ur Haskell. In diesem Projekt wurde das Tool Cabal eingesetzt, weil Libraries des Package Repository Hackage eingesetzt wurden und Cabal kann Abh"angigkeiten zu Hackages Packages automatisch aufl"osen. Ausserdem verwaltet Cabal Projektmetadaten, wie Lizenz, Author, u.s.w.
+Um das Projekt zu kompilieren und die Abh"angigkeiten aufzul"osen, wurde das Buildtool Cabal eingesetzt. Die verwendete Version ist 1.20.0.2. Cabal ein Paketisierung und Build System f"ur Haskell. Cabal wird verwendet, weil die Implementation der Algorithmen Pakete aus dem Repository Hackage verwendet. Cabal l"ost Abh"angigkeiten zu Hackage Paketen automatisch auf. Ausserdem verwaltet Cabal Projektmetadaten, wie Lizenz, Author, u.s.w.
 
 \subsubsection{Sandboxing}
 \label{sec:sanboxing}
@@ -1080,9 +1080,9 @@ cabal sandbox init
 \subsection{Daten einlesen}
 \label{sec:readio}
 
-Beim Einlesen der Daten sollte mit \verb|ByteString| gearbeitet werden. Dieser Abschnitt beschreibt weshalb \verb|ByteString| in diesem Projekt eingesetzt wurde.
+Beim Einlesen der Daten sollte mit \verb|ByteString| gearbeitet werden. Dieser Abschnitt beschreibt, weshalb \verb|ByteString| eingesetzt wird.
 
-Bei der Ausf"uhrung der Evaluation werden die Daten jedesmal vom Filesystem eingelesen. Das Modul Prelude bietet daf"ur die Funktion
+Bei der Ausf"uhrung der Evaluation werden die Daten vom Filesystem eingelesen. Das Modul \verb|Prelude| bietet daf"ur die Funktion
 \begin{verbatim}
 readFile:: FilePath -> IO String
 \end{verbatim}
@@ -1127,7 +1127,7 @@ toVec (Right v) = v
 
 Die ersten Implementation der Collaborative Filtering Algorithmen haben oft zu viel Arbeitsspeicher allokiert und das Programm ben"otigte zu viel Zeit. Um Probleme der Skalierbarkeit zu l"osen wurden Statistiken "uber das Verhalten der Algorithmen zur Laufzeit erstellt.
 
-Der GHC Compiler unterst"utzt Time und Memory Profiling. Der generierte Output zeigt, wieviel Zeit und Speicher eine Funktion verursacht. Das heisst jede Funktion hat ein sogennantes Kostencenter. Jedesmal, wenn die Funktion aufgerufen wird, werden Zeit und Memory zu den vorhandenen Werten im Kostencenter hinzugez"ahlt. Um die Werte in Kostencenter zu berechnen, generiert der Compiler zus"atzlichen Code, der die Berechnung ausf"uhrt. Die zu analysierenden Programme m"ussen also mit der entsprechenden Compiler Option kompiliert werden \cite{Mena}.
+Der GHC Compiler unterst"utzt Time und Memory Profiling. Der generierte Output zeigt, wieviel Zeit und Speicher eine Funktion verursacht. Das heisst jede Funktion hat ein sogenanntes Kostencenter. Jedesmal, wenn die Funktion aufgerufen wird, werden Zeit und Memory zu den vorhandenen Werten im Kostencenter hinzugez"ahlt. Um die Werte in Kostencenter zu berechnen, generiert der Compiler zus"atzlichen Code, der die Berechnung ausf"uhrt. Die zu analysierenden Programme m"ussen also mit der entsprechenden Compiler Option kompiliert werden \cite{Mena}.
 
 Es k"onnen nur ausf"uhrbare Dateien analysiert werden. In diesem Projekt wurde das Programm \verb|evaluaterecommender| analysiert.
 
@@ -1179,16 +1179,17 @@ Von den eigenen Implementationen hat Userbased Collaborative Filtering den tiefs
 
 Die Implementierung von Funk's Gradientenabstiegverfahren hat sich als schwierig erwiesen. Da bei diesem Verfahren die Parametervektoren oft aktualisiert werden, wird viel Speicher allokiert und der Garbage Collector muss andauernd aufr"aumen. Deshalb ist es sinnvoll zu pr"ufen, ob das Optimierungsverfahren ``Funks stochastischer Gradientenabstieg'' nicht durch ein Verfahren ersetzt werden kann, dass einfacher zu parallelisieren ist. Da die verwendeten Datenstrukturen unver"anderlich sind und die meisten Funktionen keinen Seiteneffekt haben, w"urde sich die Parallelisierung der Algorithmen anbieten.
 
-Mit Programmiersprache Haskell k"onnen die Recommender mit wenigen Zeilen Code implementiert werden. Das Package Repository Hackage bietet unter anderem Libraries f"ur den Umgang mit Matrizen und Vectoren. Es enth"alt auch Statistikpakete, die f"ur die Implementierung von Recommenender Systemen genutzt werden k"onnen.
+Mit der Programmiersprache Haskell k"onnen die Recommender mit wenigen Zeilen Code implementiert werden. Das Package Repository Hackage bietet unter anderem Softwarebibliotheken f"ur den Umgang mit Matrizen und Vektoren. Es enth"alt auch Statistikpakete, die f"ur die Implementierung von Recommenender Systemen genutzt werden k"onnen.
 
 \subsection{Implementationsvergleich}
 \label{sec:compare}
 
 Die Implementationen der beiden Algorithmen Userbased Collaborative Filtering und Matrixfaktorisierung wurden mit Implementationen des LensKit Tools verglichen. 
 
-LensKit ist ein Softwarebibliothek die verschiedene Recommender Algorithmen enth"alt. GroupLens Research Lab Universit"at Minnesota \cite{ekstrandlk11}. Sie eignet sich f"ur den Vergleich, weil LensKit Implementationen von Userbased Collaborative Filtering und Matrixfaktorisierung mit Funks SGD enth"alt.
+LensKit ist ein Softwarebibliothek die verschiedene Recommender Algorithmen enth"alt. Sie wurde von GroupLens Research Lab Universit"at Minnesota \cite{ekstrandlk11} entwickelt. Sie eignet sich f"ur den Vergleich, weil LensKit Implementationen von Userbased Collaborative Filtering und Matrixfaktorisierung mit Funks SGD enth"alt.
 
-Die LensKit Implementationen wurden mit dem Datenset von MovieLens evaluiert. Dieses enth"alt 10000 Filmbewertungen. Die implementieren Algorithmen wurden auch mit diesem Datenset evaluiert.
+Die LensKit Implementationen wurden mit dem selben Datenset von MovieLens wie die beschriebenen Algorithmen evaluiert.
+
 \begin{figure}
   \centering
 \begin{tikzpicture}
@@ -1205,8 +1206,8 @@ bar width=9pt,
 nodes near coords,
 nodes near coords align={vertical},
 ]
-\addplot coordinates {(Userbased,0.65) (Matrixfaktorisierung,0.79)};
-\addplot coordinates {(Userbased,0.64) (Matrixfaktorisierung,0.62)};
+\addplot coordinates {(Userbased,0.66) (Matrixfaktorisierung,0.74)};
+\addplot coordinates {(Userbased,0.65) (Matrixfaktorisierung,0.63)};
 
 \legend{eigene,LensKit}
 \end{axis}
