@@ -1,0 +1,244 @@
+* Baseline Predictor
+Es wird einfach der mean aller wertungen berechnen. mal sehen ob ich diese baseline verbessern kann.
+** rating dicionary erstellen
+um das avg von user und item auszurechnen sollen dictionaries fuer item und user erstellt werden
+*** TODO user dict
+das user dictionary enthaelt als key user id und als value eine liste aller ratings dieses users
+
+* User-based
+User base filtering sucht nach user, die aehnlich sind. 
+Die Technik um aehnliche User zu finden heisst kNN. k neirest neighbors.
+[[http://elehack.net/research/pubs/cf-survey/cf-survey.pdf][collaborative fitering recommendations]]
+** Nearest neighbor
+Es wird eine neighborhood N fuer einen user u erstellt.
+*** Euclidean distance
+ich verwende die squared euclidien distance
+ein beispiel
+[1,2,3] [2,4,6] = 14
+
+*** Pearson Similarity
+Um zwei User miteinander zu vergleichen, kann die Pearson Similarity eingesetzt werden.
+Was passiert mit User die keine gemeinschaftlichen Item gerated haben? 
+Wenn es keinen User gibt, der das selbe Item bewertet hat, ist der Korrelationskoeffizient -1.
+Die Pearson Similarity beruecksichtigt nur gemeinsam geratete Daten.
+Was passiert wenn zwei User ein einziges gemeinsames Item haben und dieses gleich bewerten?
+Dann zeigt der Pearson Correlation Coffezient eine hohe Aehnlichkeit an.
+*** Beispieldaten
+
+| item | rating u1 | rating u2 |
+|------+-----------+-----------|
+|    1 |        43 |        99 |
+|    2 |        21 |        65 |
+|    3 |        25 |        79 |
+|    4 |        42 |        75 |
+|    5 |        57 |        87 |
+|    6 |        59 |        81 |
+
+2868 / 5413.27 = 0.529809
+
+3,5,5,1,4
+5,5,4,1,2
+0.641503
+
+2,3,4,5,5
+1,2,3,4,4
+-1
+
+1,2,3,4,5
+5,4,3,2,1
+-1
+
+*** Implementation
+Fuer einen User u und ein Item brauche man ein Narchbarschaft. 
+Die Nachbarschaft muss folgendes enthalten
+- similiarity aehnlichkeit, rating, 
+- die user in der nachbarschaft muessen alle das item i bewertet haben
+
+ich brauch also ein map die mir zu einem item alle user gibt item -> user
+diese list heisst si.
+ich habe die liste mit user. ich will die similities dieser user mit u
+ein dict hat als key user u und als value ein dict u'-> s user user
+ein zweites dict hat key user und item -> rating.
+
+die Neighborhood funktion muss ueber alle user mappen. eine multimap user -> items
+fuer die item eine map item -> user item
+
+Bei dieser Methode muss man entscheiden wieviele Nachbarn, dass man verwendet um die Aehnlichkeit zu berechnen.
+Herlocker empfielt 20 - 50
+
+Zu einem Item mussen alle User gefunden werden, die dieses Item bewertet haben.
+Map item -> [user]
+Mit dieser list geht man zum neighborhood dict. 
+
+es wird ein neighborhood dict benoetig. key ist ein user. value ein dict mit user sim
+* matrix factorization
+** coursera machine learning course
+Jedes Item hat ein Feature vector (romance, action)
+warum braucht man den interceptor (erstes element in einem vektor)
+** implementation
+- daten laden. matrix R hat 1 wenn wert. matrix Y hat alle ratings.
+- cofiCostFunction implementieren
+- minimizer implementieren. was nimmt fmincg fuer argumente
+** learning algorithm
+man moecht die gleichtung J minimieren.
+Koren schlaegt zwei algorithmen vor
+- stochastic gradient descent
+- alternating least squares
+
+1682 user, 943 items
+
+kann ich das auch mit einfachem gradient descent machen?
+die latent factor vectoren lassen fuer alle items lassen isch als eine matrix mit 1682 zeilen darstellen
+items ist die x matrix. users die theta matrix.
+
+* Data
+[[http://files.grouplens.org/datasets/movielens/ml-100k-README.txt][movielens 100k ratings set readme]]
+[[http://files.grouplens.org/datasets/movielens/ml-100k.zip][movielens 100k ratings zip file]]
+Daten in u.data sind in Kolonnen strukturiert. 
+Erste Kolonne user id, zweite item.id, dritte rating, vierte timestamp
+u1.base hat 80000 ratings.
+943 user
+1682 items
+
+matrizen von octave skript
+1682 x 943
+
+reduzierte matrizen
+672 x 376
+
+ggT 1
+kostenfunktion mit test value gibt 83.02101
+
+* Haskell
+[[http://www.cse.chalmers.se/~rjmh/Papers/arrows.pdf]]
+
+- IO Action :: Type und typeconstructor. Hat
+- Functor :: ist eine Typeclass. Forder mapf. Ueber diese Struktur kann gemappt werden. can be mapped over.
+- Applicative functors :: Normale Funktionen koennen auf zwei Funktoren angewandt werden. Resultat ist ein Funktor.
+- Value contstructor :: ZipList ist ein value constructor.
+- Type constructor :: list[] ist ein type constructor
+- Monoid :: mappend nimmt zwei Monoids und gibt wieder einen zurueck. Es gibt einen Identity Element und Monoids sind assoziativ.
+- Type class :: Type classes definieren Funktionen, fuer Instanzen einer Type class. Instanzen werden mit type construktoren gemacht. Stellen ein Interface dar.
+- Type variable :: Kommt in der type class Definition vor.
+
+** Types
+Types werden mit data definiert. Ein Type hat Values. Values werden in der Typedefinition mit Constructors definiert
+** Constructor
+Ein Constructor ist eine Funktion. Der Constructor hat einen Bezeichner und optional Parameter die als Typen angegeben werden.
+** Type constructor
+** Type parameter
+Ein type kann einen typeparamter haben. Dieser wird in der Funktionsdefinition definiert oder vom konkreten value abgeleitet.
+** Typeclasses
+** Type constructor
+
+Nimmt einen type als Parameter.
+** Monoid
+** Functor
+** Warum Haskell
+- Fehler werden frueh erkannt
+- weniger code
+- concurrency und parallel processing kann einfach genutzt werden
+ - eignet sich fuer analyse, modellierung, simulation
+* Evaluation
+- movielens data set hat 5 training test paare. u1.base - u1.test. 
+- training/test ration = x = 80000/20000
+- ich verwende eine accuracy metric. den mean absolute error mae.
+
+| Technik                 |        MAE |
+| User Durchschnitt       | 0.93033844 |
+| Rating Durchschnitt     |  1.0440313 |
+| Itemrating Durchschnitt |  0.8579661 |
+| Useruser euclid         |   0.871809 |
+| Matrix Factorization    |  2.0929263 |
+|                         |            | 
+
+** matrix factorization  
+| iterations | nr of feature |
+|          2 |            2  |
+|            |               | 
+  
+* vorgehen
+** TODO similarity fuer 2 user
+** TODO similirity fuer 1 user
+gib eine liste von allen similarities aus tupel (similarity, user)
+
+* Probleme
+- pearson similarity geht nicht wenn beide user ein gemeinsames item raten und das gleich ist. 
+es gibt im nenner 0
+- ich habe eine dictionary. key sind user. values sind dictionaries mit items als keys und ratings als values
+- pearson [2,2] [4,4] ergibt NaN
+- eintrag 5 im testset macht probleme user:1 item: 20
+- Strings lesen mit read ist zu langsam. Bytestring funktioniert besser weil nicht lazy sondern strict
+siehe LeARN your a good haskell
+- Wenn zwei user nur 1 gemeinsames item haben gibt es keine variance, kein pearson koeffizient
+* Profiling
+profiling ist auf seite 122 in beginning haskell beschrieben.
+man muss die applikation mit der option +RTS -p -K100M -RTS starten
+** 10 Predictions
+	total time  =        2.73 secs   (2733 ticks @ 1000 us, 1 processor)
+	total alloc = 1,121,864,104 bytes  (excludes profiling overheads)
+
+COST CENTRE     MODULE                    %time %alloc
+
+itemsOfUser     Useruser                   61.6    0.2
+texts2ints      Main                       19.0   41.7
+ratingsOfUser   Useruser                    9.7    0.0
+loadData        Main                        5.5   46.6
+unstream/resize Data.Text.Internal.Fusion   1.6    4.1
+str2text        Main                        1.3    5.1
+strs2texts      Main                        0.4    1.9
+** 100 Predictions
+	total time  =       21.54 secs   (21539 ticks @ 1000 us, 1 processor)
+	total alloc = 1,189,782,736 bytes  (excludes profiling overheads)
+
+COST CENTRE     MODULE                    %time %alloc
+
+itemsOfUser     Useruser                   80.7    2.1
+ratingsOfUser   Useruser                   14.4    0.1
+texts2ints      Main                        2.4   39.6
+loadData        Main                        0.6   44.0
+unstream/resize Data.Text.Internal.Fusion   0.2    3.9
+str2text        Main                        0.2    4.8
+users           Useruser                    0.2    1.2
+sim_distance    Useruser                    0.1    1.7
+strs2texts      Main                        0.1    1.8
+
+* Vereinbarung fuer Projektarbeit
+Projekttitel: Movielens Recommender System
+Projektstart: 29.9.2014
+Projektende: 23.1.2014 (abklaeren)
+** Projektziele und Projektbeschreibung
+Haendler und Content Provider moechten Kunden passende Artikel empfehlen. Es geht darum Kunden Artikel zuzuweisen. 
+Die Artikel sollen den die 
+Im Laufe dieser Arbeit soll ein Recommender System entwickelt werden. 
+Dabei sollen unter anderem Methode des Collaborative Filtering eingesetzt werden.
+Das Recommender System soll mit einer geigneten Methode evaluiert werden. 
+Das Recommender System verarbeitet die Movielens Testdaten und wird mit Movielens Testdaten evaluiert.
+Die Movielens Dataset wird fuer in eine geeignete Form transformiert.
+Der Detailscope der Arbeit wird im Laufe des Projektes agil angepasst.
+** Leistungsbeurteilung
+- Organisation Durchfuehrung
+- Bericht / Sprache
+- Umsetzung
+
+Projektpartner: INS
+Ergebnisse: Recommender Implementation
+** Kompetenzen 
+- Programmiersprache Haskell
+- Ecosystem Haskell
+- Projekt realisieren
+- Schreibkompetenz
+* sitzung 6.1.
+es gibt nur vorteile
+prediction empfehlung unterscheidung unklar 
+kreuzvalidierung
+N ist unklar
+dimensions reduktion. erwaehen dass es ein besipiel ist.
+fazit und ausblick: mehr schreiben. einordnung der resultate. vergleich mit anderen.
+* sitzung 20.1
+- ist die arbeit genuegend
+- formele sachen. titelblatt, erklaerung dass die arbeit von mir ist (ba), eigenstaendigkeiterklaerung. in anhang
+- cd was muss drauf sein. was ist wichtig.
+- arbeit bei henrik
+- abteilungsabend
+- abstract fuer komm: bild kleiner. bild lesbar. matrixfaktorisation durch matrix faktorisierung.

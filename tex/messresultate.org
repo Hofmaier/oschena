@@ -1,12 +1,12 @@
+* bias
 | methode           |                mae |   zeit |
 | mu                | 0.9680487749999698 |  0.318 |
 | mu + bu           |  0.850191274015045 |  0.588 |
 | mu + bu + bi      | 0.7681497093455869 | 31.881 |
 | Userbased pearson | 1.0514676565318386 | 21.918 |
-| Userbased         |     0.718435506612 | 45.41  |
+| Userbased         |     0.718435506612 |  45.41 |
 
-
-userbase
+* userbased
 | neighborhoodsize |                mae |
 |               20 |   0.86178701206253 |
 |               40 | 0.9346724213743522 |
@@ -19,20 +19,7 @@ userbase
 |               20 |        0.716587229 |
 |                  |                    |
 
-model2 
-
-m1
-m2
-s6
-
-p1 n7 n7 n8 n3
-
-
-(R.*M)
-err = (X*Theta') - Y;
-
-M = err.^2;
-
+* matrixfaktorisierung
 | iterationen | features |                mae | alpha |  reg | time   |
 |           1 |        2 |    0.9026971315226 |   0.1 |      |        |
 |           1 |       10 |   0.92791333322289 |   0.1 |      |        |

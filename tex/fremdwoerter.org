@@ -1,0 +1,11 @@
+- Latent factor model - latente Variablen
+- Latent factor Vektor - Vektor umschreiben
+- Recommender - Empfehlungsdienst
+- Recommender system - Empfehlungsdienst
+- Collaborative filtering - kollaborativen Filtern
+- Content-based filtering - Inhaltsbasierte Empfehlungsdienste
+- User-based Collaborative - nutzerbasierter Empfehlungsdienst
+
+
+- Matrixfaktorisierung - Matrix Faktorisierung
+- Userbased - User-based
