@@ -25,18 +25,18 @@ dispatch "mf" = matrixfactorization
 dispathc _ = bias
 
 matrixfactorization :: [String] -> IO ()
-matrixfactorization xs =  do
+matrixfactorization (base:test:xs) =  do
   putStrLn "Start userbased recommender"
-  (traindata, testdata) <- loadData
+  (traindata, testdata) <- loadData base test
   m <- Mf.model traindata
-  putStrLn $ "Mean Absolute Error: " ++ (show $ mae (Mf.predict m) testdata)  
-
+  let bm = Bi.model traindata
+  putStrLn $ "Mean Absolute Error: " ++ (show $ mae (Mf.predict m bm) testdata)  
 
 userbased :: [String] -> IO ()
-userbased _ = do
+userbased (base:test:xs) = do
   putStrLn "Start userbased recommender"
   putStrLn "Loading Data"
-  (modelv, testv) <- loadData
+  (modelv, testv) <- loadData base test
   let m = Ub.model modelv 
   putStrLn $ "Mean Absolute Error: " ++ (show $ mae (Ub.predict m) testv)  
 
@@ -52,19 +52,19 @@ errors :: ( Int -> Int -> Double )
        -> V.Vector Rating
        -> V.Vector Double
 errors p v = V.filter (\x -> not $ isNaN x) $ V.map (\(u, i, r) -> abs (r - p u i)) v
+  where diff (u, i, r) = abs (r - p u i)
 
-bias _ = do
+bias (base:test:xs) = do
   putStrLn "Start bias recommender"
   putStrLn "Loading Data"
-  (modelv, testv) <- loadData
+  (modelv, testv) <- loadData base test
   let (mu,urm,ium,uirm) = Bi.model modelv 
   putStrLn $ "Mean Absolute Error: " ++ (show $ mae (Bi.predict mu urm ium uirm) testv)  
 
-basefile = "/home/lukas/oschena/ml-100k/base.csv"
-testfile = "/home/lukas/oschena/ml-100k/test.csv"
-
-loadData :: IO (V.Vector Rating, V.Vector Rating) 
-loadData = do
+loadData :: String -> 
+            String ->
+            IO (V.Vector Rating, V.Vector Rating) 
+loadData basefile testfile = do
   c1 <- Bl.readFile basefile
   c2 <- Bl.readFile testfile
   let baseData = decode NoHeader c1 :: Either String (V.Vector Rating)

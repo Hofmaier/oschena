@@ -134,7 +134,7 @@ bu mu urm u = bu
         n = fromIntegral $ length ratingsofUser
         bu = s / n
 
--- | comutes similarity between user
+-- | comutes eucledian similarity between user
 sim_distance :: User 
              -> User
              -> [[Int]]

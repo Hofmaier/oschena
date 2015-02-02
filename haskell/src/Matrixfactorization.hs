@@ -11,8 +11,9 @@ import qualified Numeric.SGD as S
 import qualified Numeric.SGD.Dataset as D
 import System.IO (hSetBuffering, stdout, BufferMode (NoBuffering))
 
+import qualified Bias as Bi
+
 type Parameter = ( M.Matrix Double, M.Matrix Double)
-type Parameter2 = M.Matrix (V.Vector Double)
 type Csvdata = Either String (V.Vector [Double])
 type CsvInt = Either String (V.Vector [Int])
 type Item = Int
@@ -20,11 +21,12 @@ type User = Int
 type Features = M.Matrix (V.Vector Double)
 type Rating = (Int, Int, Double)
 type Elem = [Rating]
+type BiasModel = (Double, MM.MultiMap User Double, MM.MultiMap Item User, Map.Map User (Map.Map Item Double))
 
 alpha = 0.01
-lambda = 0.1
-nr_iter = 3
-nfeatures = 4
+lambda = 0.01
+nr_iter = 2
+nfeatures = 10
 nusers = 943
 nitems = 1682
 xlength = nitems * nfeatures
@@ -44,10 +46,13 @@ model dataset = do
 -- | comutes a prediction for rating of user u on item i based on
 -- the latent factor vectors
 predict :: S.Para -- ^ fitted latent factor vector in flat vector
+        -> BiasModel
         -> Int -- ^ User id
         -> Int -- ^ Item id
         -> Double
-predict para u i = sum [(para U.! (indexi i f)) * (para U.! (indexu u f))| f <- frange]
+predict para m u i = bias + sum [(para U.! (indexi i f)) * (para U.! (indexu u f))| f <- frange]
+                      where bias = Bi.predict mu urm ium uirm u i
+                            (mu,urm,ium,uirm) = m 
 
 -- | Run the monadic version of SGD.
 runsgd :: S.Para
@@ -60,22 +65,28 @@ runsgd para ium uirm all d = do
   let sgdArgs = S.sgdArgsDefault { S.iterNum = nr_iter, S.gain0=alpha }
   let uim = uidict all
   let avg = mu all
-  S.sgd sgdArgs (notify all) (grad) d para 
+  let bm = Bi.model (V.fromList all)
+  S.sgd sgdArgs (notify bm all) (grad bm) d para 
 
 -- | Notification run by the sgdM function every parameters update.
-notify :: [(Int,Int,Double)] -> S.Para -> Int -> IO ()
-notify d para k = putStr ("\n" ++ (show k) ++ ("\t") ++ (show (goal para d)))
+notify :: BiasModel
+       -> [(Int,Int,Double)]
+       -> S.Para
+       -> Int
+       -> IO ()
+notify mu d para k = putStr ("\n" ++ (show k) ++ ("\t") ++ (show (goal mu para d)))
 
 -- | One gradient descent step es descripe on
 -- http://sifter.org/~simon/journal/2061211.html
-grad :: S.Para 
-      -> (Int,Int,Double)
-      -> S.Grad
-grad para (u,i,r) = S.fromList concatpara
+grad :: BiasModel
+        -> S.Para
+        -> (Int,Int,Double)
+        -> S.Grad
+grad mu para (u,i,r) = S.fromList concatpara
   where concatpara = (qi u i r) ++ (pu u i r)
-        qi u i r= qi2 u i (errorui u i para r) 
+        qi u i r= qi2 u i (errorui u i para mu r) 
         qi2 u i e =  [(indexi i f, ((para U.! (indexu u f)) * e) - (lambda *(para U.! (index2 u f))))| f <- frange]
-        pu u i r = pu2 u i (errorui u i para r)
+        pu u i r = pu2 u i (errorui u i para mu r)
         pu2 u i e =  [(indexu u f, ((para U.! (indexi i f)) * e) - (lambda *(para U.! (indexu u f) )))| f <- frange]
 
 -- | calculates error for trainingdata user , item,
@@ -83,11 +94,13 @@ grad para (u,i,r) = S.fromList concatpara
 errorui :: Int -- ^ User id
      -> Int -- ^ Item id
      -> U.Vector Double -- ^ Paramter Vector
+     -> BiasModel
      -> Double -- ^ Rating
      -> Double -- ^ Error
-errorui u i para r = r - (sum [(para U.! (indexi i f)) * (para U.! (indexu u f))| f <- frange])
-
-
+errorui u i para bm r = r - bias - (sum [(para U.! (indexi i f)) * (para U.! (indexu u f))| f <- frange])
+  where bias = Bi.predict mu urm ium uirm u i
+        (mu,urm,ium,uirm) = bm 
+        
 -- | Get the index of a feature of a item in the parametervector
 indexi :: Int -- ^ item nr
        -> Int -- ^ feature nr
@@ -101,10 +114,13 @@ indexu :: Int -- ^ user nr
 indexu x f = nitems + (nfeatures * (x-1)) + f
 
 -- | cost function. return the squared sum of all error with training set
-goal :: S.Para -> [(Int,Int,Double)] -> Double
-goal para xs = sum (map (\x -> err2 x) xs)
-                where err2 (u, i, r) = (r - (sum [el i u f | f <- frange]))^2
-                      el i u f = para U.! (index2 i f) * (para U.! (nusers+(index2 u f)))
+goal :: BiasModel -> S.Para -> [(Int,Int,Double)] -> Double
+goal bm para xs = sum (map (\x -> err2 x) xs)
+  where err2 (u, i, r) = (r - mu - (sum [el i u f | f <- frange]))^2
+        el i u f = para U.! (indexi i f) * (para U.! ((indexu u f)))
+        bias u i = Bi.predict mu urm ium uirm u i
+        (mu,urm,ium,uirm) = bm
+        
 
 -- | negates all gradient parameters
 negGrad :: (S.Para -> (Int,Int,Double) -> S.Grad)
@@ -211,7 +227,7 @@ main = do
     hSetBuffering stdout NoBuffering
     fitted <- D.withVect datalist (runsgd para ium uirm datalist)
     putStrLn ("start: " ++ (show (V.length dataset)))
-    putStrLn $ "mean absolute error is: " ++ (show $ mae2 avg (predict fitted) testlist)
+--    putStrLn $ "mean absolute error is: " ++ (show $ mae2 avg (predict fitted avg) testlist)
 
 testfile = "/home/lukas/oschena/ml-100k/test.csv"
 basefile = "/home/lukas/oschena/ml-100k/base.csv"

@@ -37,23 +37,25 @@ predict :: Double  -- ^ Average rating
           -> Int   -- ^ Item id
           -> Double
 predict mu urm ium uirm us it = mu + (bu mu urm us) + bi
-                       where dev = map (\x -> rating x it - (bu mu urm x) - mu) users
-                             s = sum $ dev 
-                             n = fromIntegral $ length users
-                             rating u i = rui u i (irm u)  
-                             userlength = fromIntegral $ length users
-                             bi = s / n
-                             rui u i m = M.findWithDefault 0 i m
-                             users = MM.lookup it ium
-                             irm u = M.findWithDefault M.empty u uirm
+  where dev = map (\x -> rating x it - (bu mu urm x) - mu) users
+        s = sum $ dev 
+        n = fromIntegral $ length users
+        rating u i = rui u i (irm u)  
+        userlength = fromIntegral $ length users
+        bi = s / n
+        rui u i m = M.findWithDefault 0 i m
+        users = MM.lookup it ium
+        irm u = M.findWithDefault M.empty u uirm
 
+-- | Predicts user deviation from global average
 bu :: Double
-   -> MM.MultiMap Int Double
+   -> MM.MultiMap Int Double -- ^ Map with User to Ratings mapping
    -> User
    -> Double
 bu mu urm u = bu
   where ratingsofUser = MM.lookup u urm
-        dev = map (\x -> x - mu) $ ratingsofUser
-        s = sum dev 
-        n = fromIntegral $ length ratingsofUser
-        bu = s / n
+        dev = sum (map (\x -> x - mu) $ ratingsofUser)
+        bu = dev / (fromIntegral $ length ratingsofUser)
+
+--bi = s / n
+--  where dev = map (\x -> rating x it - (bu mu urm x) - mu) users
